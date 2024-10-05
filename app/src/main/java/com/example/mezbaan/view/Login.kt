@@ -115,7 +115,7 @@ fun Login(
                         fontSize = MaterialTheme.dimens.fontsize
                     )
                 }
-                AddHeight(MaterialTheme.dimens.medium1)
+                AddHeight(MaterialTheme.dimens.small3)
                 Button(
                     onClick = {
                         navController.navigate(route = Screens.Home.route)
@@ -131,7 +131,7 @@ fun Login(
                 ) {
                     Text(
                         "Sign In",
-                        fontSize = MaterialTheme.dimens.fontsize
+                        fontSize = MaterialTheme.dimens.buttontext
                     )
                 }
                 AddHeight(MaterialTheme.dimens.medium3)
@@ -167,7 +167,9 @@ fun Login(
                             containerColor = Color.Transparent
                         ),
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.height(MaterialTheme.dimens.buttonHeight).width(70.dp)
+                        modifier = Modifier
+                            .height(MaterialTheme.dimens.buttonHeight + 10.dp)
+                            .width(MaterialTheme.dimens.buttonWidth)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.facebook),
@@ -183,7 +185,9 @@ fun Login(
                             containerColor = Color.Transparent
                         ),
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.height(MaterialTheme.dimens.buttonHeight).width(70.dp)
+                        modifier = Modifier
+                            .height(MaterialTheme.dimens.buttonHeight + 10.dp)
+                            .width(MaterialTheme.dimens.buttonWidth)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.mail),

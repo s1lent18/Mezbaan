@@ -66,10 +66,10 @@ fun Itemstobook(
                 painter = image,
                 contentDescription = null,
                 tint = if (isSelected) Color.White else if(isSystemInDarkTheme()) Color.White else Color.Black,
-                modifier = Modifier.size(25.dp)
+                modifier = Modifier.size(MaterialTheme.dimens.iconsize)
             )
             //AddHeight(10.dp)
-            Text(text, fontSize = MaterialTheme.dimens.fontsize)
+            Text(text, fontSize = MaterialTheme.dimens.buttontext)
         }
     }
 }
@@ -90,10 +90,11 @@ fun Cards(image: Painter, text: String, onclick: () -> Unit) {
             Icon(
                 painter = image,
                 contentDescription = null,
-                tint = Color.White
+                tint = Color.White,
+                modifier = Modifier.size(MaterialTheme.dimens.iconsize)
             )
             AddHeight(10.dp)
-            Text(text, color = Color.White)
+            Text(text, color = Color.White, fontSize = MaterialTheme.dimens.buttontext)
         }
     }
 }
@@ -144,28 +145,28 @@ fun Home(navController: NavController) {
                             isSelected = selectedOption.value == "Venues",
                             onclick = { selectedOption.value = "Venues" }
                         )
-                        AddWidth(12.dp)
+                        AddWidth(MaterialTheme.dimens.scrollspacer)
                         Itemstobook(
                             image = painterResource(R.drawable.food),
                             text = "Caterers",
                             isSelected = selectedOption.value == "Caterers",
                             onclick = { selectedOption.value = "Caterers" }
                         )
-                        AddWidth(18.dp)
+                        AddWidth(MaterialTheme.dimens.scrollspacer)
                         Itemstobook(
                             image = painterResource(R.drawable.decor),
                             text = "Decorators",
                             isSelected = selectedOption.value == "Decorators",
                             onclick = { selectedOption.value = "Decorators" }
                         )
-                        AddWidth(18.dp)
+                        AddWidth(MaterialTheme.dimens.scrollspacer)
                         Itemstobook(
                             image = painterResource(R.drawable.servicevendor),
                             text = "Vendors",
                             isSelected = selectedOption.value == "Vendors",
                             onclick = { selectedOption.value = "Vendors" }
                         )
-                        AddWidth(18.dp)
+                        AddWidth(MaterialTheme.dimens.scrollspacer)
                     }
                 }
 
@@ -193,7 +194,7 @@ fun Home(navController: NavController) {
                 LazyRow (
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(18.dp)
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.scrollspacer)
                 ) {
                     if (selectedOption.value == "Venues") {
                         item {
@@ -226,7 +227,7 @@ fun Home(navController: NavController) {
                 LazyRow (
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(18.dp)
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.scrollspacer)
                 ) {
                     if (selectedOption.value == "Venues") {
                         item {
@@ -237,7 +238,7 @@ fun Home(navController: NavController) {
                                     navController.navigate(route = Screens.Venues.route)
                                 }
                             )
-                            AddWidth(18.dp)
+                            AddWidth(MaterialTheme.dimens.scrollspacer)
                             Cards(
                                 image = painterResource(R.drawable.hotel),
                                 text = "Santorini",

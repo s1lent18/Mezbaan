@@ -52,15 +52,11 @@ fun Input(
     ) {
     TextField(
         modifier = Modifier
-            .fillMaxWidth(fraction = 0.8f)
-            .height(MaterialTheme.dimens.buttonHeight + 10.dp),
+            .fillMaxWidth(fraction = 0.8f),
         label = {
             Text(
                 label,
-                fontSize = MaterialTheme.dimens.fontsize,
-                modifier = Modifier
-                    .fillMaxWidth(),
-                textAlign = TextAlign.Start
+
             )
         },
         value = value,
@@ -104,7 +100,7 @@ fun Signup(
                 AddHeight(MaterialTheme.dimens.medium1)
                 Text(
                     "Welcome to Mezbaan!",
-                    fontSize = 30.sp,
+                    fontSize = MaterialTheme.dimens.heading,
                     fontWeight = FontWeight.Bold
                 )
                 AddHeight(MaterialTheme.dimens.small3)
@@ -112,7 +108,7 @@ fun Signup(
                     modifier = Modifier.fillMaxWidth(fraction = 0.6f)
                 ) { Text(
                     "Welcome Back you've been missed!",
-                    fontSize = 22.sp,
+                    fontSize = MaterialTheme.dimens.fontsize,
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Normal,
                     color = Color.Gray
@@ -156,14 +152,19 @@ fun Signup(
 
                 Button(
                     onClick = {},
-                    modifier = Modifier.fillMaxWidth(fraction = 0.8f).height(50.dp),
+                    modifier = Modifier
+                        .fillMaxWidth(fraction = 0.8f)
+                        .height(MaterialTheme.dimens.buttonHeight),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = backgroundcolor,
                         contentColor = secondarycolor
                     )
                 ) {
-                    Text("Register")
+                    Text(
+                        "Register",
+                        fontSize = MaterialTheme.dimens.buttontext
+                    )
                 }
                 AddHeight(MaterialTheme.dimens.medium1)
                 Row (
@@ -176,7 +177,10 @@ fun Signup(
                         color = Color.Gray
                     )
                     AddWidth(20.dp)
-                    Text("Or Sign Up With")
+                    Text(
+                        "Or Sign Up With",
+                        fontSize = MaterialTheme.dimens.fontsize
+                    )
                     AddWidth(20.dp)
                     HorizontalDivider(
                         modifier = Modifier.weight(1f),
@@ -195,7 +199,9 @@ fun Signup(
                             containerColor = Color.Transparent
                         ),
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.height(70.dp).width(100.dp)
+                        modifier = Modifier
+                            .height(MaterialTheme.dimens.buttonHeight + 10.dp)
+                            .width(MaterialTheme.dimens.buttonWidth)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.facebook),
@@ -210,7 +216,9 @@ fun Signup(
                             containerColor = Color.Transparent
                         ),
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.height(70.dp).width(100.dp)
+                        modifier = Modifier
+                            .height(MaterialTheme.dimens.buttonHeight + 10.dp)
+                            .width(MaterialTheme.dimens.buttonWidth)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.mail),
@@ -225,10 +233,14 @@ fun Signup(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text("Already a Member? ")
+                    Text(
+                        "Already a Member? ",
+                        fontSize = MaterialTheme.dimens.fontsize
+                    )
                     AddWidth(5.dp)
                     Text(
                         "Login now",
+                        fontSize = MaterialTheme.dimens.fontsize,
                         color = backgroundcolor,
                         modifier = Modifier.clickable {
                             //navController.navigate(route = Screens.Signup.route)

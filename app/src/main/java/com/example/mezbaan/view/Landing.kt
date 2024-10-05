@@ -59,7 +59,7 @@ fun Landing(
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(R.drawable.mezbaan), // Your image resource
+                    painter = painterResource(R.drawable.mezbaan),
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize(),
@@ -116,7 +116,7 @@ fun Landing(
                 ) {
                     Text(
                         "Sign In",
-                        fontSize = MaterialTheme.dimens.fontsize
+                        fontSize = MaterialTheme.dimens.buttontext
                     )
                 }
                 Button(
@@ -132,7 +132,7 @@ fun Landing(
                 ) {
                     Text(
                         "Register",
-                        fontSize = MaterialTheme.dimens.fontsize
+                        fontSize = MaterialTheme.dimens.buttontext
                     )
                 }
             }
