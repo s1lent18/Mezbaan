@@ -16,6 +16,7 @@ activityCompose = "1.9.2"
 composeBom = "2024.04.01"
 material3WindowSizeClass = "1.3.0"
 navigationCompose = "2.8.1"
+playServicesAuth = "21.2.0"
 retrofit = "(insert latest version)"
 material3WindowSizeClassAndroid = "1.3.0"
 material3WindowSizeClassAndroidVersion = "1.3.0"
@@ -46,6 +47,7 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 androidx-material3-window-size-android = { group = "androidx.compose.material3", name = "material3-window-size-class-android", version.ref = "androidxMaterial3WindowSizeClassAndroid" }
 

@@ -66,7 +66,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.accompanist.flowlayout.v0301)
     implementation(libs.androidx.material3.window.size.android)
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation(libs.play.services.auth)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.hilt.android.testing.v248)
