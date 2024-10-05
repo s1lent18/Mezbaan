@@ -7,7 +7,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,7 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.MezbaanTheme
 import com.example.mezbaan.ui.theme.dimens
@@ -60,7 +58,7 @@ class SplashActivity : ComponentActivity() {
         ) {
             Text(
                 text = displayedText,
-                fontSize = MaterialTheme.dimens.heading,
+                fontSize = dimens.heading,
                 color = secondarycolor,
                 fontFamily = Bebas,
                 fontWeight = FontWeight.Bold

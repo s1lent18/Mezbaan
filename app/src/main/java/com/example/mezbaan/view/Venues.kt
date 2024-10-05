@@ -21,7 +21,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,7 +48,7 @@ fun Cardammedity(text : String) {
             .padding(horizontal = 5.dp, vertical = 2.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(text, fontSize = MaterialTheme.dimens.buttontext, color = Color.Black
+        Text(text, fontSize = dimens.buttontext, color = Color.Black
         )
     }
 
@@ -78,7 +77,7 @@ fun Venues() {
                     contentScale = ContentScale.FillBounds
                 )
             }
-            AddHeight(MaterialTheme.dimens.small3)
+            AddHeight(dimens.small3)
             LazyColumn (
                 modifier = Modifier.fillMaxWidth(fraction = 0.9f)
             ) {
@@ -86,10 +85,10 @@ fun Venues() {
                     Column {
                         Text(
                             "Name of the venue",
-                            fontSize = MaterialTheme.dimens.fontsize,
+                            fontSize = dimens.fontsize,
                             fontWeight = FontWeight.Bold
                         )
-                        AddHeight(MaterialTheme.dimens.small1)
+                        AddHeight(dimens.small1)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Start,
@@ -98,17 +97,17 @@ fun Venues() {
                             Icon(
                                 Icons.Default.Star,
                                 contentDescription = null,
-                                modifier = Modifier.size(MaterialTheme.dimens.iconsize)
+                                modifier = Modifier.size(dimens.iconsize)
                             )
-                            Text("Rating of the venue", fontSize = MaterialTheme.dimens.fontsize)
+                            Text("Rating of the venue", fontSize = dimens.fontsize)
                         }
                     }
-                    AddHeight(MaterialTheme.dimens.small1)
+                    AddHeight(dimens.small1)
                     HorizontalDivider(
                         modifier = Modifier.fillMaxWidth(),
                         color = Color.Gray
                     )
-                    AddHeight(MaterialTheme.dimens.small1)
+                    AddHeight(dimens.small1)
                     Row (
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -117,13 +116,13 @@ fun Venues() {
                         Column {
                             Text(
                                 "Business Name",
-                                fontSize = MaterialTheme.dimens.fontsize,
+                                fontSize = dimens.fontsize,
                                 fontWeight = FontWeight.Bold
                             )
-                            AddHeight(MaterialTheme.dimens.small1)
+                            AddHeight(dimens.small1)
                             Text(
                                 "Manager Name",
-                                fontSize = MaterialTheme.dimens.fontsize,
+                                fontSize = dimens.fontsize,
                                 color = Color.Gray
                             )
                         }
@@ -132,25 +131,25 @@ fun Venues() {
                         ) {
                             Image(
                                 modifier = Modifier
-                                    .size(MaterialTheme.dimens.logoSize)
+                                    .size(dimens.logoSize)
                                     .clip(CircleShape),
                                 painter = painterResource(R.drawable.mezbaan),
                                 contentDescription = null
                             )
                         }
                     }
-                    AddHeight(MaterialTheme.dimens.small1)
+                    AddHeight(dimens.small1)
                     HorizontalDivider(
                         modifier = Modifier.fillMaxWidth(),
                         color = Color.Gray
                     )
-                    AddHeight(MaterialTheme.dimens.small1)
+                    AddHeight(dimens.small1)
                     Text(
                         "Amenities",
-                        fontSize = MaterialTheme.dimens.fontsize,
+                        fontSize = dimens.fontsize,
                         fontWeight = FontWeight.Bold
                     )
-                    AddHeight(MaterialTheme.dimens.small1)
+                    AddHeight(dimens.small1)
                     FlowRow(
                         mainAxisSpacing = 10.dp,
                         crossAxisSpacing = 10.dp,
@@ -162,7 +161,7 @@ fun Venues() {
                         Cardammedity("Washing Machine")
                         Cardammedity("Washing Machine")
                     }
-                    AddHeight(MaterialTheme.dimens.small2)
+                    AddHeight(dimens.small2)
                     HorizontalDivider(
                         modifier = Modifier.fillMaxWidth(),
                         color = Color.Gray
@@ -170,8 +169,8 @@ fun Venues() {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(MaterialTheme.dimens.cardsize)
-                            .padding(vertical = MaterialTheme.dimens.small2)
+                            .height(dimens.cardsize)
+                            .padding(vertical = dimens.small2)
                             .clip(RoundedCornerShape(10.dp))
                             .background(backgroundcolor),
                         contentAlignment = Alignment.Center
@@ -184,16 +183,16 @@ fun Venues() {
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column (
-                                modifier = Modifier.height(MaterialTheme.dimens.buttonHeight + 10.dp),
+                                modifier = Modifier.height(dimens.buttonHeight + 10.dp),
                                 verticalArrangement = Arrangement.SpaceBetween,
                             ) {
                                 Text(
                                     "18-21 Oct - 3 nights",
-                                    fontSize = MaterialTheme.dimens.fontsize,
+                                    fontSize = dimens.fontsize,
                                     color = secondarycolor
                                 )
                                 Text("$384",
-                                    fontSize = MaterialTheme.dimens.fontsize,
+                                    fontSize = dimens.fontsize,
                                     color = secondarycolor,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -204,9 +203,9 @@ fun Venues() {
                                     containerColor = secondarycolor,
                                     contentColor = backgroundcolor
                                 ),
-                                modifier = Modifier.height(MaterialTheme.dimens.buttonHeight)
+                                modifier = Modifier.height(dimens.buttonHeight)
                             ) {
-                                Text("Book Now", fontSize = MaterialTheme.dimens.buttontext)
+                                Text("Book Now", fontSize = dimens.buttontext)
                             }
                         }
                     }
@@ -214,7 +213,7 @@ fun Venues() {
                         modifier = Modifier.fillMaxWidth(),
                         color = Color.Gray
                     )
-                    AddHeight(MaterialTheme.dimens.small2)
+                    AddHeight(dimens.small2)
                 }
             }
         }

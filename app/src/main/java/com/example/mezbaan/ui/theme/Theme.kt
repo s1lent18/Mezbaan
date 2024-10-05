@@ -15,8 +15,6 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import com.example.mezbaan.MainActivity
-import com.example.mezbaan.SplashActivity
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -63,7 +61,7 @@ fun MezbaanTheme(
 
     val window = calculateWindowSizeClass(activity = activity)
     val config = LocalConfiguration.current
-    var appDimens = CompactDimens
+    val appDimens: Dimens
 
     when(window.widthSizeClass) {
         WindowWidthSizeClass.Compact -> {
@@ -100,6 +98,6 @@ fun MezbaanTheme(
     }
 }
 
-val MaterialTheme.dimens
+val dimens
     @Composable
     get() = LocalAppDimens.current

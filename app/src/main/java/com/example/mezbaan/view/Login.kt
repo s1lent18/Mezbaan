@@ -3,7 +3,6 @@ package com.example.mezbaan.view
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +18,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,7 +32,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.mezbaan.R
 import com.example.mezbaan.ui.theme.alterblack
@@ -69,31 +66,31 @@ fun Login(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                AddHeight(MaterialTheme.dimens.medium1)
+                AddHeight(dimens.medium1)
                 Text(
                     "Hello Again!",
-                    fontSize = MaterialTheme.dimens.heading,
+                    fontSize = dimens.heading,
                     fontWeight = FontWeight.Bold
                 )
-                AddHeight(MaterialTheme.dimens.medium3)
+                AddHeight(dimens.medium3)
                 Row (
                     modifier = Modifier.fillMaxWidth(fraction = 0.6f)
                 ) { Text(
                     "Welcome Back you've been missed!",
-                    fontSize = MaterialTheme.dimens.fontsize,
+                    fontSize = dimens.fontsize,
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Normal,
                     color = Color.Gray
                 ) }
 
-                AddHeight(MaterialTheme.dimens.medium3)
+                AddHeight(dimens.medium3)
                 Input(
                     label = "Enter Username",
                     value = username,
                     onValueChange = setusername,
                     color = color
                 )
-                AddHeight(MaterialTheme.dimens.medium3)
+                AddHeight(dimens.medium3)
                 Input(
                     label = "Password",
                     value = password,
@@ -104,7 +101,7 @@ fun Login(
                     ) },
                     color = color
                 )
-                AddHeight(MaterialTheme.dimens.small3)
+                AddHeight(dimens.small3)
                 Row(
                     modifier = Modifier.fillMaxWidth(fraction = 0.8f),
                     verticalAlignment = Alignment.CenterVertically,
@@ -112,17 +109,17 @@ fun Login(
                 ) {
                     Text(
                         "Recover Password",
-                        fontSize = MaterialTheme.dimens.fontsize
+                        fontSize = dimens.fontsize
                     )
                 }
-                AddHeight(MaterialTheme.dimens.small3)
+                AddHeight(dimens.small3)
                 Button(
                     onClick = {
                         navController.navigate(route = Screens.Home.route)
                     },
                     modifier = Modifier
                         .fillMaxWidth(fraction = 0.8f)
-                        .height(MaterialTheme.dimens.buttonHeight),
+                        .height(dimens.buttonHeight),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = backgroundcolor,
@@ -131,10 +128,10 @@ fun Login(
                 ) {
                     Text(
                         "Sign In",
-                        fontSize = MaterialTheme.dimens.buttontext
+                        fontSize = dimens.buttontext
                     )
                 }
-                AddHeight(MaterialTheme.dimens.medium3)
+                AddHeight(dimens.medium3)
                 Row (
                     modifier = Modifier.fillMaxWidth(fraction = 0.8f),
                     horizontalArrangement = Arrangement.Center,
@@ -147,7 +144,7 @@ fun Login(
                     AddWidth(20.dp)
                     Text(
                         "Or Continue With",
-                        fontSize = MaterialTheme.dimens.fontsize
+                        fontSize = dimens.fontsize
                     )
                     AddWidth(20.dp)
                     HorizontalDivider(
@@ -155,7 +152,7 @@ fun Login(
                         color = Color.Gray
                     )
                 }
-                AddHeight(MaterialTheme.dimens.medium3)
+                AddHeight(dimens.medium3)
                 Row(
                     modifier = Modifier.fillMaxWidth(fraction = 0.8f),
                     horizontalArrangement = Arrangement.SpaceEvenly,
@@ -168,8 +165,8 @@ fun Login(
                         ),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
-                            .height(MaterialTheme.dimens.buttonHeight + 10.dp)
-                            .width(MaterialTheme.dimens.buttonWidth)
+                            .height(dimens.buttonHeight + 10.dp)
+                            .width(dimens.buttonWidth)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.facebook),
@@ -186,8 +183,8 @@ fun Login(
                         ),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
-                            .height(MaterialTheme.dimens.buttonHeight + 10.dp)
-                            .width(MaterialTheme.dimens.buttonWidth)
+                            .height(dimens.buttonHeight + 10.dp)
+                            .width(dimens.buttonWidth)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.mail),
@@ -196,7 +193,7 @@ fun Login(
                         )
                     }
                 }
-                AddHeight(MaterialTheme.dimens.medium1)
+                AddHeight(dimens.medium1)
                 Row(
                     modifier = Modifier.fillMaxWidth(fraction = 0.8f),
                     verticalAlignment = Alignment.CenterVertically,
@@ -204,7 +201,7 @@ fun Login(
                 ) {
                     Text(
                         "Not a Member? ",
-                        fontSize = MaterialTheme.dimens.fontsize
+                        fontSize = dimens.fontsize
                     )
                     AddWidth(5.dp)
                     Text(
@@ -213,7 +210,7 @@ fun Login(
                         modifier = Modifier.clickable {
                             navController.navigate(route = Screens.Signup.route)
                         },
-                        fontSize = MaterialTheme.dimens.fontsize
+                        fontSize = dimens.fontsize
                     )
                 }
             }

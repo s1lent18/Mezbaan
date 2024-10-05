@@ -16,7 +16,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,14 +32,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.mezbaan.R
 import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
-import com.example.mezbaan.viewmodel.Screens
 
 @Composable
 fun Input(
@@ -74,7 +70,7 @@ fun Input(
         ),
         shape = RoundedCornerShape(10.dp),
         textStyle = TextStyle(
-            fontSize = MaterialTheme.dimens.fontsize
+            fontSize = dimens.fontsize
         )
     )
 }
@@ -97,38 +93,38 @@ fun Signup(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                AddHeight(MaterialTheme.dimens.medium1)
+                AddHeight(dimens.medium1)
                 Text(
                     "Welcome to Mezbaan!",
-                    fontSize = MaterialTheme.dimens.heading,
+                    fontSize = dimens.heading,
                     fontWeight = FontWeight.Bold
                 )
-                AddHeight(MaterialTheme.dimens.small3)
+                AddHeight(dimens.small3)
                 Row (
                     modifier = Modifier.fillMaxWidth(fraction = 0.6f)
                 ) { Text(
                     "Welcome Back you've been missed!",
-                    fontSize = MaterialTheme.dimens.fontsize,
+                    fontSize = dimens.fontsize,
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Normal,
                     color = Color.Gray
                 ) }
 
-                AddHeight(MaterialTheme.dimens.medium3)
+                AddHeight(dimens.medium3)
                 Input(
                     label = "Enter Username",
                     value = username,
                     onValueChange = setusername,
                     color = color
                 )
-                AddHeight(MaterialTheme.dimens.small3)
+                AddHeight(dimens.small3)
                 Input(
                     label = "Phone Number",
                     value = phonenumber,
                     onValueChange = setphonenumber,
                     color = color
                 )
-                AddHeight(MaterialTheme.dimens.small3)
+                AddHeight(dimens.small3)
                 Input(
                     label = "Email",
                     value = email,
@@ -136,7 +132,7 @@ fun Signup(
                     color = color
                 )
 
-                AddHeight(MaterialTheme.dimens.small3)
+                AddHeight(dimens.small3)
                 Input(
                     label = "Password",
                     value = password,
@@ -148,13 +144,13 @@ fun Signup(
                     color = color
                 )
 
-                AddHeight(MaterialTheme.dimens.medium1)
+                AddHeight(dimens.medium1)
 
                 Button(
                     onClick = {},
                     modifier = Modifier
                         .fillMaxWidth(fraction = 0.8f)
-                        .height(MaterialTheme.dimens.buttonHeight),
+                        .height(dimens.buttonHeight),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = backgroundcolor,
@@ -163,10 +159,10 @@ fun Signup(
                 ) {
                     Text(
                         "Register",
-                        fontSize = MaterialTheme.dimens.buttontext
+                        fontSize = dimens.buttontext
                     )
                 }
-                AddHeight(MaterialTheme.dimens.medium1)
+                AddHeight(dimens.medium1)
                 Row (
                     modifier = Modifier.fillMaxWidth(fraction = 0.8f),
                     horizontalArrangement = Arrangement.Center,
@@ -179,7 +175,7 @@ fun Signup(
                     AddWidth(20.dp)
                     Text(
                         "Or Sign Up With",
-                        fontSize = MaterialTheme.dimens.fontsize
+                        fontSize = dimens.fontsize
                     )
                     AddWidth(20.dp)
                     HorizontalDivider(
@@ -187,7 +183,7 @@ fun Signup(
                         color = Color.Gray
                     )
                 }
-                AddHeight(MaterialTheme.dimens.medium1)
+                AddHeight(dimens.medium1)
                 Row(
                     modifier = Modifier.fillMaxWidth(fraction = 0.8f),
                     horizontalArrangement = Arrangement.SpaceEvenly,
@@ -200,8 +196,8 @@ fun Signup(
                         ),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
-                            .height(MaterialTheme.dimens.buttonHeight + 10.dp)
-                            .width(MaterialTheme.dimens.buttonWidth)
+                            .height(dimens.buttonHeight + 10.dp)
+                            .width(dimens.buttonWidth)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.facebook),
@@ -217,8 +213,8 @@ fun Signup(
                         ),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
-                            .height(MaterialTheme.dimens.buttonHeight + 10.dp)
-                            .width(MaterialTheme.dimens.buttonWidth)
+                            .height(dimens.buttonHeight + 10.dp)
+                            .width(dimens.buttonWidth)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.mail),
@@ -227,7 +223,7 @@ fun Signup(
 
                     }
                 }
-                AddHeight(MaterialTheme.dimens.medium3)
+                AddHeight(dimens.medium3)
                 Row(
                     modifier = Modifier.fillMaxWidth(fraction = 0.8f),
                     verticalAlignment = Alignment.CenterVertically,
@@ -235,19 +231,19 @@ fun Signup(
                 ) {
                     Text(
                         "Already a Member? ",
-                        fontSize = MaterialTheme.dimens.fontsize
+                        fontSize = dimens.fontsize
                     )
                     AddWidth(5.dp)
                     Text(
                         "Login now",
-                        fontSize = MaterialTheme.dimens.fontsize,
+                        fontSize = dimens.fontsize,
                         color = backgroundcolor,
                         modifier = Modifier.clickable {
                             //navController.navigate(route = Screens.Signup.route)
                         }
                     )
                 }
-                AddHeight(MaterialTheme.dimens.small3)
+                AddHeight(dimens.small3)
             }
         }
     }

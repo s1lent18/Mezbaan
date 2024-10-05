@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +32,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.mezbaan.R
 import com.example.mezbaan.ui.theme.alterblack
@@ -52,8 +50,8 @@ fun Itemstobook(
     FloatingActionButton(
         onClick = onclick,
         modifier = Modifier
-            .height(MaterialTheme.dimens.scroll)
-            .width(MaterialTheme.dimens.scrollwidth),
+            .height(dimens.scroll)
+            .width(dimens.scrollwidth),
         containerColor = if (isSelected) backgroundcolor else if(isSystemInDarkTheme()) alterblack else Color.White,
         contentColor = if (isSelected) Color.White else if(isSystemInDarkTheme()) Color.White else Color.Black
     ) {
@@ -66,10 +64,10 @@ fun Itemstobook(
                 painter = image,
                 contentDescription = null,
                 tint = if (isSelected) Color.White else if(isSystemInDarkTheme()) Color.White else Color.Black,
-                modifier = Modifier.size(MaterialTheme.dimens.iconsize)
+                modifier = Modifier.size(dimens.iconsize)
             )
             //AddHeight(10.dp)
-            Text(text, fontSize = MaterialTheme.dimens.buttontext)
+            Text(text, fontSize = dimens.buttontext)
         }
     }
 }
@@ -79,7 +77,7 @@ fun Cards(image: Painter, text: String, onclick: () -> Unit) {
     FloatingActionButton(
         onClick = onclick,
         modifier = Modifier
-            .height(MaterialTheme.dimens.cards)
+            .height(dimens.cards)
             .aspectRatio(0.65f),
         containerColor = backgroundcolor
     ) {
@@ -91,10 +89,10 @@ fun Cards(image: Painter, text: String, onclick: () -> Unit) {
                 painter = image,
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(MaterialTheme.dimens.iconsize)
+                modifier = Modifier.size(dimens.iconsize)
             )
             AddHeight(10.dp)
-            Text(text, color = Color.White, fontSize = MaterialTheme.dimens.buttontext)
+            Text(text, color = Color.White, fontSize = dimens.buttontext)
         }
     }
 }
@@ -113,14 +111,14 @@ fun Home(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                AddHeight(MaterialTheme.dimens.small3)
+                AddHeight(dimens.small3)
                 Row (
                     modifier = Modifier.fillMaxWidth(fraction = 0.9f),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("What do you want\nto book?",
-                        fontSize = MaterialTheme.dimens.heading,
+                        fontSize = dimens.heading,
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(
@@ -132,7 +130,7 @@ fun Home(navController: NavController) {
                         )
                     }
                 }
-                AddHeight(MaterialTheme.dimens.small3)
+                AddHeight(dimens.small3)
 
                 LazyRow (
                     modifier = Modifier.fillMaxWidth(),
@@ -145,32 +143,32 @@ fun Home(navController: NavController) {
                             isSelected = selectedOption.value == "Venues",
                             onclick = { selectedOption.value = "Venues" }
                         )
-                        AddWidth(MaterialTheme.dimens.scrollspacer)
+                        AddWidth(dimens.scrollspacer)
                         Itemstobook(
                             image = painterResource(R.drawable.food),
                             text = "Caterers",
                             isSelected = selectedOption.value == "Caterers",
                             onclick = { selectedOption.value = "Caterers" }
                         )
-                        AddWidth(MaterialTheme.dimens.scrollspacer)
+                        AddWidth(dimens.scrollspacer)
                         Itemstobook(
                             image = painterResource(R.drawable.decor),
                             text = "Decorators",
                             isSelected = selectedOption.value == "Decorators",
                             onclick = { selectedOption.value = "Decorators" }
                         )
-                        AddWidth(MaterialTheme.dimens.scrollspacer)
+                        AddWidth(dimens.scrollspacer)
                         Itemstobook(
                             image = painterResource(R.drawable.servicevendor),
                             text = "Vendors",
                             isSelected = selectedOption.value == "Vendors",
                             onclick = { selectedOption.value = "Vendors" }
                         )
-                        AddWidth(MaterialTheme.dimens.scrollspacer)
+                        AddWidth(dimens.scrollspacer)
                     }
                 }
 
-                AddHeight(MaterialTheme.dimens.small2)
+                AddHeight(dimens.small2)
 
                 Row (
                     modifier = Modifier.fillMaxWidth()
@@ -180,21 +178,21 @@ fun Home(navController: NavController) {
                 ) {
                     Text(
                         "Popular " + selectedOption.value,
-                        fontSize = MaterialTheme.dimens.heading,
+                        fontSize = dimens.heading,
                         fontWeight = FontWeight.Bold
                     )
                     Text("See All",
                         modifier = Modifier.clickable {  },
                         color = secondarycolor,
                         fontWeight = FontWeight.Bold,
-                        fontSize = MaterialTheme.dimens.fontsize
+                        fontSize = dimens.fontsize
                     )
                 }
 
                 LazyRow (
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.scrollspacer)
+                    horizontalArrangement = Arrangement.spacedBy(dimens.scrollspacer)
                 ) {
                     if (selectedOption.value == "Venues") {
                         item {
@@ -209,7 +207,7 @@ fun Home(navController: NavController) {
                     }
                 }
 
-                AddHeight(MaterialTheme.dimens.small2)
+                AddHeight(dimens.small2)
 
                 Row (
                     modifier = Modifier.fillMaxWidth()
@@ -219,7 +217,7 @@ fun Home(navController: NavController) {
                 ) {
                     Text(
                         "Hot Deals",
-                        fontSize = MaterialTheme.dimens.heading,
+                        fontSize = dimens.heading,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -227,7 +225,7 @@ fun Home(navController: NavController) {
                 LazyRow (
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.scrollspacer)
+                    horizontalArrangement = Arrangement.spacedBy(dimens.scrollspacer)
                 ) {
                     if (selectedOption.value == "Venues") {
                         item {
@@ -238,7 +236,7 @@ fun Home(navController: NavController) {
                                     navController.navigate(route = Screens.Venues.route)
                                 }
                             )
-                            AddWidth(MaterialTheme.dimens.scrollspacer)
+                            AddWidth(dimens.scrollspacer)
                             Cards(
                                 image = painterResource(R.drawable.hotel),
                                 text = "Santorini",
@@ -249,7 +247,7 @@ fun Home(navController: NavController) {
                         }
                     }
                 }
-                AddHeight(MaterialTheme.dimens.small3)
+                AddHeight(dimens.small3)
             }
         }
     }

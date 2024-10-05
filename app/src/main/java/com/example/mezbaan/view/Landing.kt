@@ -6,18 +6,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +26,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.mezbaan.R
 import com.example.mezbaan.ui.theme.backgroundcolor
@@ -67,7 +62,7 @@ fun Landing(
                 )
             }
 
-            AddHeight(MaterialTheme.dimens.medium1) // 30.dp
+            AddHeight(dimens.medium1) // 30.dp
 
             Row(
                 modifier = Modifier.fillMaxWidth(fraction = 0.8f)
@@ -75,7 +70,7 @@ fun Landing(
                 Text(
                     text = "Your One-Stop Event Management Solution",
                     fontWeight = FontWeight.Bold,
-                    fontSize = MaterialTheme.dimens.heading,
+                    fontSize = dimens.heading,
                     textAlign = TextAlign.Center,
                     color = backgroundcolor
                 )
@@ -83,7 +78,7 @@ fun Landing(
 
 
 
-            AddHeight(MaterialTheme.dimens.medium1) // 30.dp
+            AddHeight(dimens.medium1) // 30.dp
 
             Row (
                 modifier = Modifier.fillMaxWidth(fraction = 0.6f)
@@ -91,12 +86,12 @@ fun Landing(
                 Text(
                     text = "Easily organize, promote, and execute seamless events from start to finish with our intuitive and feature-rich app",
                     color = backgroundcolor,
-                    fontSize = MaterialTheme.dimens.fontsize,
+                    fontSize = dimens.fontsize,
                     textAlign = TextAlign.Center
                 )
             }
 
-            AddHeight(MaterialTheme.dimens.medium3)
+            AddHeight(dimens.medium3)
 
             Row (
                 modifier = Modifier.fillMaxWidth(fraction = 0.9f),
@@ -107,7 +102,7 @@ fun Landing(
                     onClick = {
                         navController.navigate(route = Screens.Login.route)
                     },
-                    modifier = Modifier.height(MaterialTheme.dimens.buttonHeight),
+                    modifier = Modifier.height(dimens.buttonHeight),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = backgroundcolor,
@@ -116,14 +111,14 @@ fun Landing(
                 ) {
                     Text(
                         "Sign In",
-                        fontSize = MaterialTheme.dimens.buttontext
+                        fontSize = dimens.buttontext
                     )
                 }
                 Button(
                     onClick = {
                         navController.navigate(route = Screens.Signup.route)
                     },
-                    modifier = Modifier.height(MaterialTheme.dimens.buttonHeight),
+                    modifier = Modifier.height(dimens.buttonHeight),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = backgroundcolor,
@@ -132,11 +127,11 @@ fun Landing(
                 ) {
                     Text(
                         "Register",
-                        fontSize = MaterialTheme.dimens.buttontext
+                        fontSize = dimens.buttontext
                     )
                 }
             }
-            AddHeight(MaterialTheme.dimens.small3)
+            AddHeight(dimens.small3)
         }
     }
 }
