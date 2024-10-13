@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.accompanist.flowlayout.v0301)
     implementation(libs.androidx.material3.window.size.android)
     implementation(libs.play.services.auth)
+    implementation(libs.androidx.constraintlayout.compose)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.hilt.android.testing.v248)

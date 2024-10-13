@@ -23,9 +23,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.NavController
 import com.example.mezbaan.R
 import com.example.mezbaan.ui.theme.backgroundcolor
@@ -41,97 +44,179 @@ fun Landing(
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 50.dp),
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Box(
+            ConstraintLayout(
                 modifier = Modifier
-                    .fillMaxWidth(fraction = 0.9f)
-                    .fillMaxHeight(fraction = 0.46f)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFE8EAF6)),
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .padding(top = 80.dp, bottom = 40.dp)
             ) {
-                Image(
-                    painter = painterResource(R.drawable.mezbaan),
-                    contentDescription = null,
+                val (iconbox, welcometext, buttonrow) = createRefs()
+
+                Box(
                     modifier = Modifier
-                        .fillMaxSize(),
-                    contentScale = ContentScale.FillBounds
-                )
-            }
-
-            AddHeight(dimens.medium1) // 30.dp
-
-            Row(
-                modifier = Modifier.fillMaxWidth(fraction = 0.8f)
-            ) {
-                Text(
-                    text = "Your One-Stop Event Management Solution",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = dimens.heading,
-                    textAlign = TextAlign.Center,
-                    color = backgroundcolor
-                )
-            }
-
-
-
-            AddHeight(dimens.medium1) // 30.dp
-
-            Row (
-                modifier = Modifier.fillMaxWidth(fraction = 0.6f)
-            ) {
-                Text(
-                    text = "Easily organize, promote, and execute seamless events from start to finish with our intuitive and feature-rich app",
-                    color = backgroundcolor,
-                    fontSize = dimens.fontsize,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            AddHeight(dimens.medium3)
-
-            Row (
-                modifier = Modifier.fillMaxWidth(fraction = 0.9f),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(
-                    onClick = {
-                        navController.navigate(route = Screens.Login.route)
-                    },
-                    modifier = Modifier.height(dimens.buttonHeight),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = backgroundcolor,
-                        contentColor = secondarycolor
-                    )
+                        .fillMaxWidth(fraction = 0.9f)
+                        .fillMaxHeight(fraction = 0.46f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFFE8EAF6))
+                        .constrainAs(iconbox) {
+                            top.linkTo(parent.top)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        "Sign In",
-                        fontSize = dimens.buttontext
+                    Image(
+                        painter = painterResource(R.drawable.mezbaan),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentScale = ContentScale.FillBounds
                     )
                 }
-                Button(
-                    onClick = {
-                        navController.navigate(route = Screens.Signup.route)
+
+                Row (
+                    modifier = Modifier.constrainAs(welcometext) {
+                        top.linkTo(iconbox.bottom, margin = 30.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        width = Dimension.percent(0.8f)
                     },
-                    modifier = Modifier.height(dimens.buttonHeight),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = backgroundcolor,
-                        contentColor = secondarycolor
-                    )
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Register",
-                        fontSize = dimens.buttontext
+                        text = "Your One-Stop Event Management Solution",
+                        color = backgroundcolor,
+                        fontSize = dimens.heading,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 35.sp,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp),
+                        maxLines = 2,
+                        overflow = Ellipsis
                     )
                 }
+
+                Row (
+                    modifier = Modifier.constrainAs(buttonrow) {
+                        top.linkTo(welcometext.bottom, margin = 30.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(parent.bottom, margin = 30.dp)
+                        width = Dimension.percent(0.9f)
+                    },
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = {
+                            navController.navigate(route = Screens.Login.route)
+                        },
+                        modifier = Modifier.height(dimens.buttonHeight),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = backgroundcolor,
+                            contentColor = secondarycolor
+                        )
+                    ) {
+                        Text(
+                            "Sign In",
+                            fontSize = dimens.buttontext
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            navController.navigate(route = Screens.Signup.route)
+                        },
+                        modifier = Modifier.height(dimens.buttonHeight),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = backgroundcolor,
+                            contentColor = secondarycolor
+                        )
+                    ) {
+                        Text(
+                            "Register",
+                            fontSize = dimens.buttontext
+                        )
+                    }
+                }
             }
-            AddHeight(dimens.small3)
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxWidth(fraction = 0.9f)
+//                    .fillMaxHeight(fraction = 0.46f)
+//                    .clip(RoundedCornerShape(10.dp))
+//                    .background(Color(0xFFE8EAF6)),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                Image(
+//                    painter = painterResource(R.drawable.mezbaan),
+//                    contentDescription = null,
+//                    modifier = Modifier
+//                        .fillMaxSize(),
+//                    contentScale = ContentScale.FillBounds
+//                )
+//            }
+//
+//            AddHeight(dimens.medium1) // 30.dp
+//
+//
+//
+//            Row (
+//                modifier = Modifier.fillMaxWidth(fraction = 0.8f)
+//            ) {
+//                Text(
+//                    text = "Your One-Stop Event Management Solution",
+//                    color = backgroundcolor,
+//                    fontSize = dimens.fontsize,
+//                    textAlign = TextAlign.Center
+//                )
+//            }
+//
+//            AddHeight(dimens.medium3)
+//
+//            Row (
+//                modifier = Modifier.fillMaxWidth(fraction = 0.9f),
+//                horizontalArrangement = Arrangement.SpaceEvenly,
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Button(
+//                    onClick = {
+//                        navController.navigate(route = Screens.Login.route)
+//                    },
+//                    modifier = Modifier.height(dimens.buttonHeight),
+//                    shape = RoundedCornerShape(10.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = backgroundcolor,
+//                        contentColor = secondarycolor
+//                    )
+//                ) {
+//                    Text(
+//                        "Sign In",
+//                        fontSize = dimens.buttontext
+//                    )
+//                }
+//                Button(
+//                    onClick = {
+//                        navController.navigate(route = Screens.Signup.route)
+//                    },
+//                    modifier = Modifier.height(dimens.buttonHeight),
+//                    shape = RoundedCornerShape(10.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = backgroundcolor,
+//                        contentColor = secondarycolor
+//                    )
+//                ) {
+//                    Text(
+//                        "Register",
+//                        fontSize = dimens.buttontext
+//                    )
+//                }
+//            }
+//            AddHeight(dimens.small3)
         }
     }
 }

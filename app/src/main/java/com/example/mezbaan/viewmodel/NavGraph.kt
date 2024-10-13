@@ -22,11 +22,13 @@ fun NavGraph(
 
         this.composable(
             route = Screens.Login.route
-        ) { Login(navController = navController) }
+        ) { Login(
+            navController = navController
+        ) }
 
         this.composable(
             route = Screens.Signup.route
-        ) { Signup(/*navController = navController*/) }
+        ) { Signup(navController = navController) }
 
         this.composable(
             route = Screens.Home.route

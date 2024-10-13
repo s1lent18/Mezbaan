@@ -20,6 +20,7 @@ data class Dimens(
     val heading: TextUnit = 0.sp,
     val fontsize: TextUnit = 0.sp,
     val buttontext: TextUnit = 0.sp,
+    val cardfont: TextUnit = 0.sp,
     val scroll: Dp = 0.dp,
     val cards: Dp = 0.dp,
     val scrollspacer: Dp = 0.dp,
@@ -29,25 +30,26 @@ data class Dimens(
 )
 
 val CompactSmallDimens = Dimens(
-    small1 = 5.dp,
+    small1 = 10.dp,
     small2 = 15.dp,
     small3 = 20.dp,
-    medium1 = 15.dp,
+    medium1 = 30.dp,
     medium2 = 36.dp,
     medium3 = 30.dp,
     large = 80.dp,
-    buttonHeight = 40.dp,
-    buttonWidth = 70.dp,
-    logoSize = 40.dp,
-    heading = 20.sp,
-    fontsize = 12.sp,
-    buttontext = 10.sp,
-    scroll = 50.dp,
-    cards = 150.dp,
-    scrollspacer = 12.dp,
-    scrollwidth = 70.dp,
-    iconsize = 10.dp,
-    cardsize = 100.dp
+    buttonHeight = 60.dp,
+    buttonWidth = 80.dp,
+    logoSize = 50.dp,
+    iconsize = 20.dp,
+    heading = 30.sp,
+    fontsize = 17.sp,
+    buttontext = 12.sp,
+    cardfont = 12.sp,
+    cards = 240.dp,
+    scrollspacer = 15.dp,
+    scroll = 100.dp,
+    scrollwidth = 90.dp,
+    cardsize = 130.dp
 )
 
 val CompactMediumDimens = Dimens(
@@ -64,11 +66,12 @@ val CompactMediumDimens = Dimens(
     iconsize = 20.dp,
     heading = 30.sp,
     fontsize = 17.sp,
-    buttontext = 15.sp,
-    cards = 200.dp,
+    buttontext = 12.sp,
+    cardfont = 12.sp,
+    cards = 240.dp,
     scrollspacer = 15.dp,
     scroll = 100.dp,
-    scrollwidth = 100.dp,
+    scrollwidth = 90.dp,
     cardsize = 130.dp
 )
 
@@ -78,12 +81,21 @@ val CompactDimens = Dimens(
     small3 = 20.dp,
     medium1 = 30.dp,
     medium2 = 36.dp,
-    medium3 = 60.dp,
+    medium3 = 30.dp,
     large = 80.dp,
-    buttonHeight = 50.dp,
-    scroll = 100.dp,
+    buttonHeight = 60.dp,
+    buttonWidth = 80.dp,
+    logoSize = 50.dp,
+    iconsize = 20.dp,
+    heading = 30.sp,
+    fontsize = 17.sp,
+    buttontext = 15.sp,
+    cardfont = 12.sp,
     cards = 240.dp,
-    scrollspacer = 18.dp
+    scrollspacer = 15.dp,
+    scroll = 100.dp,
+    scrollwidth = 100.dp,
+    cardsize = 130.dp
 )
 
 val MediumDimens = Dimens(

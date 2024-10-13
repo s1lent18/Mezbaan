@@ -65,15 +65,7 @@ fun MezbaanTheme(
 
     when(window.widthSizeClass) {
         WindowWidthSizeClass.Compact -> {
-            appDimens = if (config.screenWidthDp <= 360) {
-                CompactSmallDimens
-
-            } else if (config.screenWidthDp < 599) {
-                CompactMediumDimens
-
-            } else {
-                CompactDimens
-            }
+            appDimens = CompactDimens
         }
 
         WindowWidthSizeClass.Medium -> {
