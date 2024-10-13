@@ -60,7 +60,6 @@ fun MezbaanTheme(
     }
 
     val window = calculateWindowSizeClass(activity = activity)
-    val config = LocalConfiguration.current
     val appDimens: Dimens
 
     when(window.widthSizeClass) {

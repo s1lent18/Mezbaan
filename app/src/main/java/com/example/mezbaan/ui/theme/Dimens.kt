@@ -29,52 +29,6 @@ data class Dimens(
     val cardsize: Dp = 0.dp
 )
 
-val CompactSmallDimens = Dimens(
-    small1 = 10.dp,
-    small2 = 15.dp,
-    small3 = 20.dp,
-    medium1 = 30.dp,
-    medium2 = 36.dp,
-    medium3 = 30.dp,
-    large = 80.dp,
-    buttonHeight = 60.dp,
-    buttonWidth = 80.dp,
-    logoSize = 50.dp,
-    iconsize = 20.dp,
-    heading = 30.sp,
-    fontsize = 17.sp,
-    buttontext = 12.sp,
-    cardfont = 12.sp,
-    cards = 240.dp,
-    scrollspacer = 15.dp,
-    scroll = 100.dp,
-    scrollwidth = 90.dp,
-    cardsize = 130.dp
-)
-
-val CompactMediumDimens = Dimens(
-    small1 = 10.dp,
-    small2 = 15.dp,
-    small3 = 20.dp,
-    medium1 = 30.dp,
-    medium2 = 36.dp,
-    medium3 = 30.dp,
-    large = 80.dp,
-    buttonHeight = 60.dp,
-    buttonWidth = 80.dp,
-    logoSize = 50.dp,
-    iconsize = 20.dp,
-    heading = 30.sp,
-    fontsize = 17.sp,
-    buttontext = 12.sp,
-    cardfont = 12.sp,
-    cards = 240.dp,
-    scrollspacer = 15.dp,
-    scroll = 100.dp,
-    scrollwidth = 90.dp,
-    cardsize = 130.dp
-)
-
 val CompactDimens = Dimens(
     small1 = 10.dp,
     small2 = 15.dp,
