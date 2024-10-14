@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -25,11 +27,18 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -44,6 +53,46 @@ import com.google.accompanist.flowlayout.FlowRow
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+
+@Composable
+fun tailSwitch(
+    onSwitchChange: (Boolean) -> Unit,
+    first: String,
+    second: String
+): Boolean {
+    var check by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier.padding(8.dp) // Reduced padding
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Switch(
+                checked = check,
+                onCheckedChange = {
+                    check = it
+                    onSwitchChange(it)
+                },
+                colors = SwitchDefaults.colors(
+                    checkedTrackColor = secondarycolor,
+                    checkedThumbColor = backgroundcolor,
+                    uncheckedTrackColor = secondarycolor,
+                    uncheckedThumbColor = backgroundcolor
+                ),
+                modifier = Modifier.scale(0.8f) // Scaled down switch
+            )
+            Spacer(modifier = Modifier.width(4.dp)) // Reduced space
+            Text(
+                text = if (check) first else second,
+                fontSize = 14.sp // Smaller text size
+            )
+        }
+    }
+    return check
+}
+
 
 @Composable
 fun Cardammedity(text : String) {
@@ -87,83 +136,84 @@ fun GridOfBoxes() {
     }
 }
 
-@Composable
-fun HorizontalMonthPager() {
-    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 6 }) // 6 months
-    val currentDate = LocalDate.now()
-
-    Box (
-        modifier = Modifier.padding(vertical = 20.dp)
-    ) {
-        HorizontalPager(
-            state = pagerState,
-            pageSpacing = 20.dp
-        ) { page ->
-
-            val currentMonth = currentDate.plusMonths(page.toLong())
-            val formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
-            val formattedDate = currentMonth.format(formatter)
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(backgroundcolor),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(fraction = 0.9f)
-                        .fillMaxHeight(fraction = 0.9f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(
-                        modifier = Modifier.padding(vertical = 20.dp),
-                        verticalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Row {
-                            BookingCard(month = formattedDate)
-                        }
-                        AddHeight(10.dp)
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                        ) {
-                            GridOfBoxes()
-                        }
-                        AddHeight(10.dp)
-                    }
-                }
-            }
-        }
-
-        // Page Indicator (Dots) below the grid
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 20.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-
-            repeat(6) { pageIndex ->
-                val isSelected = pageIndex == pagerState.currentPage
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(if (isSelected) secondarycolor else Color.Blue)
-                        .padding(4.dp)
-                )
-                if (pageIndex != 5) {
-                    AddWidth(8.dp)
-                }
-            }
-        }
-    }
-}
+//@Composable
+//fun HorizontalMonthPager(tail: Boolean = false) {
+//    val pagerState1 = rememberPagerState(initialPage = 0, pageCount = { 6 }) // 6 months
+//    val currentDate = LocalDate.now()
+//
+//    Box (
+//        modifier = Modifier.padding(vertical = 20.dp)
+//    ) {
+//        HorizontalPager(
+//            state = pagerState1,
+//            pageSpacing = 20.dp
+//        ) { page ->
+//
+//            val currentMonth = currentDate.plusMonths(page.toLong())
+//            val formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+//            val formattedDate = currentMonth.format(formatter)
+//
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(vertical = 16.dp)
+//                    .clip(RoundedCornerShape(10.dp))
+//                    .background(backgroundcolor),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth(fraction = 0.9f)
+//                        .fillMaxHeight(fraction = 0.9f),
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    horizontalArrangement = Arrangement.SpaceBetween
+//                ) {
+//                    Column(
+//                        modifier = Modifier.padding(vertical = 20.dp),
+//                        verticalArrangement = Arrangement.SpaceBetween,
+//                    ) {
+//                        Row {
+//                            BookingCard(month = formattedDate)
+//                            tail = tailSwitch (onSwitchChange = {newTail -> tail = newTail }, first = "One Tail", second = "Two Tails")
+//                        }
+//                        AddHeight(10.dp)
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(200.dp)
+//                        ) {
+//                            GridOfBoxes()
+//                        }
+//                        AddHeight(10.dp)
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Page Indicator (Dots) below the grid
+//        Row(
+//            modifier = Modifier
+//                .align(Alignment.BottomCenter)
+//                .padding(bottom = 20.dp),
+//            horizontalArrangement = Arrangement.Center
+//        ) {
+//
+//            repeat(6) { pageIndex ->
+//                val isSelected = pageIndex == pagerState1.currentPage
+//                Box(
+//                    modifier = Modifier
+//                        .size(8.dp)
+//                        .clip(CircleShape)
+//                        .background(if (isSelected) secondarycolor else Color.Blue)
+//                        .padding(4.dp)
+//                )
+//                if (pageIndex != 5) {
+//                    AddWidth(8.dp)
+//                }
+//            }
+//        }
+//    }
+//}
 
 @Preview
 @Composable
@@ -175,6 +225,10 @@ fun Venues() {
             R.drawable.b2,
         )
         val pagerState = rememberPagerState(pageCount = { pics.size })
+        var switch = false
+        val pagerState1 = rememberPagerState(initialPage = 0, pageCount = { 6 })
+        val currentDate = LocalDate.now()
+
         Column(
             modifier = Modifier
                 .fillMaxSize(),
@@ -270,7 +324,83 @@ fun Venues() {
                         modifier = Modifier.fillMaxWidth(),
                         color = Color.Gray
                     )
-                    HorizontalMonthPager()
+                    Box (
+                        modifier = Modifier.padding(vertical = 20.dp)
+                    ) {
+                        HorizontalPager(
+                            state = pagerState1,
+                            pageSpacing = 20.dp
+                        ) { page ->
+
+                            val currentMonth = currentDate.plusMonths(page.toLong())
+                            val formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+                            val formattedDate = currentMonth.format(formatter)
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(backgroundcolor),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.9f)
+                                        .fillMaxHeight(fraction = 0.9f),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(vertical = 20.dp),
+                                        verticalArrangement = Arrangement.SpaceBetween,
+                                    ) {
+                                        Row (
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            BookingCard(month = formattedDate)
+                                            switch = tailSwitch (onSwitchChange = {newswitch -> switch = newswitch }, first = "Night", second = "Day")
+                                        }
+                                        AddHeight(10.dp)
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(200.dp)
+                                        ) {
+                                            GridOfBoxes()
+                                        }
+                                        AddHeight(10.dp)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Page Indicator (Dots) below the grid
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 20.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+
+                            repeat(6) { pageIndex ->
+                                val isSelected = pageIndex == pagerState1.currentPage
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isSelected) secondarycolor else Color.Blue)
+                                        .padding(4.dp)
+                                )
+                                if (pageIndex != 5) {
+                                    AddWidth(8.dp)
+                                }
+                            }
+                        }
+                        AddHeight(20.dp)
+                    }
                     HorizontalDivider(
                         modifier = Modifier.fillMaxWidth(),
                         color = Color.Gray

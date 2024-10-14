@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -68,6 +69,7 @@ dependencies {
     implementation(libs.androidx.material3.window.size.android)
     implementation(libs.play.services.auth)
     implementation(libs.androidx.constraintlayout.compose)
+    implementation(libs.firebase.auth)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.hilt.android.testing.v248)

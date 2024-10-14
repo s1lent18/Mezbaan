@@ -1,5 +1,11 @@
 package com.example.mezbaan.view
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -15,25 +21,31 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
@@ -106,188 +118,282 @@ fun Cards(image: Painter, text: String, onclick: () -> Unit) {
     }
 }
 
-
 @Composable
 fun Home(navController: NavController) {
     Surface {
         val selectedOption = remember { mutableStateOf("Venues") }
+        var isSearching by remember { mutableStateOf(false) }
+        var searchQuery by remember { mutableStateOf("") }
+        val suggestions = listOf("Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape", "Honeydew")
 
-        Column(
+        // Filtered list based on the search query
+        val filteredSuggestions = remember(searchQuery) {
+            if (searchQuery.isNotEmpty()) {
+                suggestions.filter { it.contains(searchQuery, ignoreCase = true) }
+            } else {
+                emptyList()
+            }
+        }
+
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = 40.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            ConstraintLayout(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 80.dp, bottom = 40.dp)
-            ) {
-                val (searchrow, itemstobook, popularheading, hotdealingheading, cards1, card2) = createRefs()
-
-                Row (
+            item {
+                // The entire ConstraintLayout section is now inside a LazyColumn
+                ConstraintLayout(
                     modifier = Modifier
-                        .constrainAs(searchrow) {
+                        .fillMaxSize()
+                        .padding(top = 80.dp, bottom = 40.dp)
+                ) {
+                    val (searchrow, itemstobook, popularheading, hotdealingheading, cards1, card2) = createRefs()
+
+                    Box(
+                        modifier = Modifier.constrainAs(searchrow) {
                             top.linkTo(parent.top)
                             start.linkTo(parent.start)
                             end.linkTo(parent.end)
                             width = Dimension.percent(0.9f)
-                        },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "What do you want to book?",
-                        fontSize = dimens.heading,
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 35.sp,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp),
-                        maxLines = 2,
-                        overflow = Ellipsis
-                    )
-                    Box(
-                        modifier = Modifier.clip(CircleShape).background(Color.Gray)
+                        }
                     ) {
-                        IconButton(
-                            onClick = {}
+                        AnimatedVisibility(
+                            visible = !isSearching,
+                            enter = fadeIn() + expandHorizontally(),
+                            exit = fadeOut() + shrinkHorizontally()
                         ) {
-                            Icon(
-                                Icons.Default.Search,
-                                contentDescription = null,
-                                tint = Color.Black
-                            )
-                        }
-                    }
-                }
-
-                LazyRow (
-                    modifier = Modifier.constrainAs(itemstobook) {
-                        top.linkTo(searchrow.bottom, margin = 30.dp)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                    },
-                    contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
-                ) {
-                    item {
-                        Itemstobook(
-                            image = painterResource(R.drawable.banquet),
-                            text = "Venues",
-                            isSelected = selectedOption.value == "Venues",
-                            onclick = { selectedOption.value = "Venues" }
-                        )
-                        AddWidth(dimens.scrollspacer)
-                        Itemstobook(
-                            image = painterResource(R.drawable.food),
-                            text = "Caterers",
-                            isSelected = selectedOption.value == "Caterers",
-                            onclick = { selectedOption.value = "Caterers" }
-                        )
-                        AddWidth(dimens.scrollspacer)
-                        Itemstobook(
-                            image = painterResource(R.drawable.decor),
-                            text = "Decorators",
-                            isSelected = selectedOption.value == "Decorators",
-                            onclick = { selectedOption.value = "Decorators" }
-                        )
-                        AddWidth(dimens.scrollspacer)
-                        Itemstobook(
-                            image = painterResource(R.drawable.servicevendor),
-                            text = "Vendors",
-                            isSelected = selectedOption.value == "Vendors",
-                            onclick = { selectedOption.value = "Vendors" }
-                        )
-                        AddWidth(dimens.scrollspacer)
-                    }
-                }
-
-                Row (
-                    modifier = Modifier
-                        .constrainAs(popularheading) {
-                            top.linkTo(itemstobook.bottom, margin = 15.dp)
-                            //start.linkTo(parent.start)
-                            //end.linkTo(parent.end)
-                        }
-                        .fillMaxWidth()
-                        .padding(horizontal = 18.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "Popular " + selectedOption.value,
-                        fontSize = dimens.heading,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text("See All",
-                        modifier = Modifier.clickable {  },
-                        color = secondarycolor,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = dimens.buttontext
-                    )
-                }
-
-                LazyRow (
-                    modifier = Modifier.constrainAs(cards1) {
-                        top.linkTo(popularheading.bottom, margin = 15.dp)
-                    },
-                    contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(dimens.scrollspacer)
-                ) {
-                    if (selectedOption.value == "Venues") {
-                        item {
-                            Cards(
-                                image = painterResource(R.drawable.hotel),
-                                text = "Santorini",
-                                onclick = {
-                                    navController.navigate(route = Screens.Venues.route)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "What do you want to book?",
+                                    fontSize = dimens.heading,
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 35.sp,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = 8.dp),
+                                    maxLines = 2,
+                                    overflow = Ellipsis
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(Color.Gray)
+                                ) {
+                                    IconButton(
+                                        onClick = { isSearching = !isSearching }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Search,
+                                            contentDescription = null,
+                                            tint = Color.Black
+                                        )
+                                    }
                                 }
-                            )
+                            }
+                        }
+                        AnimatedVisibility(
+                            visible = isSearching,
+                            enter = fadeIn() + expandHorizontally(),
+                            exit = fadeOut() + shrinkHorizontally()
+                        ) {
+                            Column {
+                                // When the icon is clicked, show the search bar
+                                TextField(
+                                    value = searchQuery,
+                                    onValueChange = { searchQuery = it },
+                                    placeholder = { Text(text = "Search...") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    leadingIcon = {
+                                        IconButton(onClick = {
+                                            isSearching = false
+                                        }) {
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                                contentDescription = "Back"
+                                            )
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        disabledIndicatorColor = Color.Transparent,
+                                    )
+                                )
+
+                                if (filteredSuggestions.isNotEmpty()) {
+                                    LazyColumn(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(200.dp)
+                                    ) {
+                                        items(filteredSuggestions.size) { suggestions ->
+                                            AddHeight(10.dp)
+                                            FloatingActionButton(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                onClick = {},
+                                                containerColor = backgroundcolor
+                                            ) {
+                                                Row (
+                                                    modifier = Modifier.fillMaxWidth(fraction = 0.9f),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                ) {
+                                                    Column {
+                                                        Text(
+                                                            text = filteredSuggestions[suggestions],
+                                                            color = secondarycolor
+                                                        )
+                                                        Text(
+                                                            text = "Venues",
+                                                            color = secondarycolor
+                                                        )
+                                                    }
+                                                    Image(
+                                                        painter = painterResource(id = R.drawable.mezbaan),
+                                                        contentDescription = null,
+                                                        modifier = Modifier
+                                                            .size(50.dp)
+                                                            .padding(4.dp)
+                                                            .clip(RoundedCornerShape(20.dp))
+                                                            .fillMaxSize(),
+                                                        contentScale = ContentScale.Crop
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
-                }
 
-                Row (
-                    modifier = Modifier.constrainAs(hotdealingheading) {
-                        top.linkTo(cards1.bottom, margin = 15.dp)
-                    }
-                        .padding(horizontal = 18.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "Hot Deals",
-                        fontSize = dimens.heading,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                LazyRow (
-                    modifier = Modifier.constrainAs(card2) {
-                        top.linkTo(hotdealingheading.bottom, margin = 15.dp)
-                    },
-                    contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(dimens.scrollspacer)
-                ) {
-                    if (selectedOption.value == "Venues") {
+                    LazyRow(
+                        modifier = Modifier.constrainAs(itemstobook) {
+                            top.linkTo(searchrow.bottom, margin = 30.dp)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        },
+                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
+                    ) {
                         item {
-                            Cards(
-                                image = painterResource(R.drawable.hotel),
-                                text = "Santorini",
-                                onclick = {
-                                    navController.navigate(route = Screens.Venues.route)
-                                }
+                            Itemstobook(
+                                image = painterResource(R.drawable.banquet),
+                                text = "Venues",
+                                isSelected = selectedOption.value == "Venues",
+                                onclick = { selectedOption.value = "Venues" }
                             )
                             AddWidth(dimens.scrollspacer)
-                            Cards(
-                                image = painterResource(R.drawable.hotel),
-                                text = "Santorini",
-                                onclick = {
-                                    navController.navigate(route = Screens.Venues.route)
-                                }
+                            Itemstobook(
+                                image = painterResource(R.drawable.food),
+                                text = "Caterers",
+                                isSelected = selectedOption.value == "Caterers",
+                                onclick = { selectedOption.value = "Caterers" }
                             )
+                            AddWidth(dimens.scrollspacer)
+                            Itemstobook(
+                                image = painterResource(R.drawable.decor),
+                                text = "Decorators",
+                                isSelected = selectedOption.value == "Decorators",
+                                onclick = { selectedOption.value = "Decorators" }
+                            )
+                            AddWidth(dimens.scrollspacer)
+                            Itemstobook(
+                                image = painterResource(R.drawable.servicevendor),
+                                text = "Vendors",
+                                isSelected = selectedOption.value == "Vendors",
+                                onclick = { selectedOption.value = "Vendors" }
+                            )
+                            AddWidth(dimens.scrollspacer)
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .constrainAs(popularheading) {
+                                top.linkTo(itemstobook.bottom, margin = 15.dp)
+                            }
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Popular " + selectedOption.value,
+                            fontSize = dimens.labeltext,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text("See All",
+                            modifier = Modifier.clickable { },
+                            color = secondarycolor,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = dimens.buttontext
+                        )
+                    }
+
+                    LazyRow(
+                        modifier = Modifier.constrainAs(cards1) {
+                            top.linkTo(popularheading.bottom, margin = 15.dp)
+                        },
+                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(dimens.scrollspacer)
+                    ) {
+                        if (selectedOption.value == "Venues") {
+                            item {
+                                Cards(
+                                    image = painterResource(R.drawable.hotel),
+                                    text = "Santorini",
+                                    onclick = {
+                                        navController.navigate(route = Screens.Venues.route)
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Row (
+                        modifier = Modifier.constrainAs(hotdealingheading) {
+                            top.linkTo(cards1.bottom, margin = 15.dp)
+                        }
+                            .padding(horizontal = 18.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Hot Deals",
+                            fontSize = dimens.labeltext,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    LazyRow (
+                        modifier = Modifier.constrainAs(card2) {
+                            top.linkTo(hotdealingheading.bottom, margin = 15.dp)
+                        },
+                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(dimens.scrollspacer)
+                    ) {
+                        if (selectedOption.value == "Venues") {
+                            item {
+                                Cards(
+                                    image = painterResource(R.drawable.hotel),
+                                    text = "Santorini",
+                                    onclick = {
+                                        navController.navigate(route = Screens.Venues.route)
+                                    }
+                                )
+                                AddWidth(dimens.scrollspacer)
+                                Cards(
+                                    image = painterResource(R.drawable.hotel),
+                                    text = "Santorini",
+                                    onclick = {
+                                        navController.navigate(route = Screens.Venues.route)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
