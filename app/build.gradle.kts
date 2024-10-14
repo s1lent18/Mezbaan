@@ -53,7 +53,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.coil.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -65,14 +64,14 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.hilt.android)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.accompanist.flowlayout.v0301)
+    implementation(libs.accompanist.flowlayout)
     implementation(libs.androidx.material3.window.size.android)
     implementation(libs.play.services.auth)
     implementation(libs.androidx.constraintlayout.compose)
     implementation(libs.firebase.auth)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
-    testImplementation(libs.hilt.android.testing.v248)
+    testImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -80,6 +79,6 @@ dependencies {
     androidTestImplementation(libs.hilt.android.testing)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    kspAndroidTest(libs.hilt.compiler.v248)
+    kspAndroidTest(libs.hilt.compiler)
     kspTest(libs.hilt.compiler)
 }
