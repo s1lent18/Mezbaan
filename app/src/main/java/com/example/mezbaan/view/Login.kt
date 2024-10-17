@@ -30,10 +30,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,7 +52,8 @@ import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
-import com.example.mezbaan.viewmodel.Screens
+import com.example.mezbaan.viewmodel.AuthViewModel
+import com.example.mezbaan.viewmodel.navigation.Screens
 import com.google.android.gms.auth.api.signin.GoogleSignIn.*
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
@@ -83,35 +84,41 @@ fun rememberfirebaselauncher(
 
     return rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val task = getSignedInAccountFromIntent(result.data)
-        try {
-
-            val account = task.getResult(ApiException::class.java)!!
-            val credential = GoogleAuthProvider.getCredential(account.idToken!!, null)
-            scope.launch {
+        scope.launch {
+            try {
+                val account = task.getResult(ApiException::class.java)!!
+                val credential = GoogleAuthProvider.getCredential(account.idToken!!, null)
                 val authResult = Firebase.auth.signInWithCredential(credential).await()
                 onAuthComplete(authResult)
-            }
+            } catch (e: ApiException) {
+                onAuthError(e)
+            } catch (_: Exception) {
 
-        } catch (e: ApiException) {
-            onAuthError(e)
+            }
         }
     }
 }
 
 @Composable
 fun Login(
-    navController: NavController
+    navController: NavController,
+    authviewmodel: AuthViewModel
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         val (username, setUsername) = remember { mutableStateOf("") }
         val (password, setPassword) = remember { mutableStateOf("") }
         val color = if (isSystemInDarkTheme()) alterblack else Color.White
-        var user by remember { mutableStateOf(Firebase.auth.currentUser) }
         val token = stringResource(R.string.client_id)
+        val user by authviewmodel.user.observeAsState()
         val context = LocalContext.current
+
         val launcher = rememberfirebaselauncher(
-            onAuthComplete = {result -> user = result.user},
-            onAuthError = { user = null }
+            onAuthComplete = { result ->
+                authviewmodel.setUser(result.user)
+            },
+            onAuthError = {
+                authviewmodel.setUser(null)
+            }
         )
 
         if (user == null) {
@@ -256,7 +263,9 @@ fun Login(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OutlinedIconButton(
-                            onClick = {},
+                            onClick = {
+
+                            },
                             colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Transparent),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.size(dimens.buttonWidth + 5.dp, dimens.buttonHeight + 20.dp)

@@ -34,7 +34,7 @@ import com.example.mezbaan.R
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
-import com.example.mezbaan.viewmodel.Screens
+import com.example.mezbaan.viewmodel.navigation.Screens
 
 @Composable
 fun Landing(
@@ -94,7 +94,8 @@ fun Landing(
                         modifier = Modifier
                             .weight(1f)
                             .padding(end = 8.dp),
-                        maxLines = 2,
+                        minLines = 2,
+                        maxLines = 3,
                         overflow = Ellipsis
                     )
                 }

@@ -45,7 +45,7 @@ import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
-import com.example.mezbaan.viewmodel.Screens
+import com.example.mezbaan.viewmodel.navigation.Screens
 
 @Composable
 fun Input(

@@ -1,6 +1,8 @@
 package com.example.mezbaan.view
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -14,10 +16,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,12 +36,13 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
@@ -54,12 +61,20 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.navigation.NavController
 import androidx.constraintlayout.compose.Dimension
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mezbaan.R
+import com.example.mezbaan.model.dataprovider.NavigationBarItems
 import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
-import com.example.mezbaan.viewmodel.Screens
+import com.example.mezbaan.viewmodel.AuthViewModel
+import com.example.mezbaan.viewmodel.navigation.Screens
+import com.exyte.animatednavbar.AnimatedNavigationBar
+import com.exyte.animatednavbar.animation.balltrajectory.Parabolic
+import com.exyte.animatednavbar.animation.indendshape.Height
+import com.exyte.animatednavbar.animation.indendshape.shapeCornerRadius
+import com.exyte.animatednavbar.utils.noRippleClickable
 
 @Composable
 fun Itemstobook(
@@ -118,9 +133,72 @@ fun Cards(image: Painter, text: String, onclick: () -> Unit) {
     }
 }
 
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun Home(navController: NavController) {
-    Surface {
+fun Home(
+    navController: NavController,
+    authviewmodel: AuthViewModel = viewModel()
+) {
+    val navigationBarItems = remember { NavigationBarItems.entries }
+    var selectedIndex by remember { mutableIntStateOf(0) }
+    val insets = WindowInsets.navigationBars
+    val bottomInsetDp = with(LocalDensity.current) { insets.getBottom(LocalDensity.current).toDp() }
+
+    Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(),
+        bottomBar = {
+            AnimatedNavigationBar(
+                modifier = Modifier
+                    .height(70.dp)
+                    .offset(y = -bottomInsetDp),
+                selectedIndex = selectedIndex,
+                cornerRadius = shapeCornerRadius(20.dp),
+                ballAnimation = Parabolic(tween(300)),
+                indentAnimation = Height(tween(300)),
+                barColor = secondarycolor,
+                ballColor = secondarycolor
+            ) {
+                navigationBarItems.forEach { item->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .noRippleClickable {
+                                selectedIndex = item.ordinal
+                                when (item) {
+                                    NavigationBarItems.Home -> {
+                                    }
+                                    NavigationBarItems.Logout -> {
+                                        authviewmodel.signOut()
+                                        navController.navigate(Screens.Login.route) {
+                                            popUpTo(Screens.Home.route) { inclusive = true }
+                                        }
+                                    }
+                                    NavigationBarItems.Account -> {}
+                                }
+                            },
+
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(15.dp),
+                            contentDescription = null,
+                            imageVector = item.icon,
+                            tint = backgroundcolor
+                        )
+                        Text(
+                            item.text,
+                            fontSize = dimens.buttontext,
+                            color = backgroundcolor
+                        )
+                    }
+                }
+            }
+        }
+    ) {
         val selectedOption = remember { mutableStateOf("Venues") }
         var isSearching by remember { mutableStateOf(false) }
         var searchQuery by remember { mutableStateOf("") }
@@ -145,7 +223,7 @@ fun Home(navController: NavController) {
                 ConstraintLayout(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = 80.dp, bottom = 40.dp)
+                        .padding(top = 80.dp, bottom = 80.dp)
                 ) {
                     val (searchrow, itemstobook, popularheading, hotdealingheading, cards1, card2) = createRefs()
 
@@ -355,9 +433,10 @@ fun Home(navController: NavController) {
                     }
 
                     Row (
-                        modifier = Modifier.constrainAs(hotdealingheading) {
-                            top.linkTo(cards1.bottom, margin = 15.dp)
-                        }
+                        modifier = Modifier
+                            .constrainAs(hotdealingheading) {
+                                top.linkTo(cards1.bottom, margin = 75.dp)
+                            }
                             .padding(horizontal = 18.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween

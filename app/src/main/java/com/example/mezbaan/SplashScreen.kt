@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.MezbaanTheme
 import com.example.mezbaan.ui.theme.dimens
@@ -58,7 +59,7 @@ class SplashActivity : ComponentActivity() {
         ) {
             Text(
                 text = displayedText,
-                fontSize = dimens.heading,
+                fontSize = 45.sp,
                 color = secondarycolor,
                 fontFamily = Bebas,
                 fontWeight = FontWeight.Bold

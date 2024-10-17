@@ -1,4 +1,4 @@
-package com.example.mezbaan.model
+package com.example.mezbaan.model.dataprovider
 
 import com.example.mezbaan.R
 
