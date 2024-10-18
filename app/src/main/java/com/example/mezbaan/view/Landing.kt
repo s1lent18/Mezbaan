@@ -31,6 +31,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.NavController
 import com.example.mezbaan.R
+import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
@@ -96,7 +97,8 @@ fun Landing(
                             .padding(end = 8.dp),
                         minLines = 2,
                         maxLines = 3,
-                        overflow = Ellipsis
+                        overflow = Ellipsis,
+                        fontFamily = Bebas
                     )
                 }
 

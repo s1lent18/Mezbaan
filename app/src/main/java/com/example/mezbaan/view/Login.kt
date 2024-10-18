@@ -1,5 +1,8 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.mezbaan.view
 
+import android.app.Activity
 import android.content.Intent
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -8,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,8 +25,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Surface
@@ -34,31 +40,45 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mezbaan.R
+import com.example.mezbaan.model.dataclasses.LoginReq
+import com.example.mezbaan.model.response.NetworkResponse
 import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
 import com.example.mezbaan.viewmodel.AuthViewModel
+import com.example.mezbaan.viewmodel.LoginViewModel
 import com.example.mezbaan.viewmodel.navigation.Screens
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
 import com.google.android.gms.auth.api.signin.GoogleSignIn.*
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.Firebase
-import com.google.firebase.auth.AuthResult
+import com.google.firebase.auth.FacebookAuthProvider
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
@@ -76,7 +96,7 @@ fun AddWidth(weight: Dp) {
 
 @Composable
 fun rememberfirebaselauncher(
-    onAuthComplete: (AuthResult) -> Unit,
+    onAuthComplete: (FirebaseUser?) -> Unit,
     onAuthError: (ApiException) -> Unit
 ) : ManagedActivityResultLauncher<Intent, ActivityResult> {
 
@@ -89,7 +109,7 @@ fun rememberfirebaselauncher(
                 val account = task.getResult(ApiException::class.java)!!
                 val credential = GoogleAuthProvider.getCredential(account.idToken!!, null)
                 val authResult = Firebase.auth.signInWithCredential(credential).await()
-                onAuthComplete(authResult)
+                onAuthComplete(authResult.user)
             } catch (e: ApiException) {
                 onAuthError(e)
             } catch (_: Exception) {
@@ -100,21 +120,99 @@ fun rememberfirebaselauncher(
 }
 
 @Composable
+fun CustomFacebookSignInButton(
+    onSignInFailed: (Exception) -> Unit,
+    onSignedIn: () -> Unit
+) {
+    val context = LocalContext.current as Activity
+    val scope = rememberCoroutineScope()
+    val callbackManager = remember { CallbackManager.Factory.create() }
+
+
+    val facebookLogin = {
+        val loginManager = LoginManager.getInstance()
+        loginManager.logInWithReadPermissions(context, listOf("public_profile"))
+
+        loginManager.registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+            override fun onCancel() {
+
+            }
+
+            override fun onError(error: FacebookException) {
+                onSignInFailed(error)
+            }
+
+            override fun onSuccess(result: LoginResult) {
+                scope.launch {
+                    try {
+                        val token = result.accessToken.token
+                        val credential = FacebookAuthProvider.getCredential(token)
+                        val authResult = Firebase.auth.signInWithCredential(credential).await()
+                        if (authResult.user != null) {
+                            onSignedIn()
+                        } else {
+                            onSignInFailed(RuntimeException("User authentication failed"))
+                        }
+                    } catch (e: Exception) {
+                        onSignInFailed(e)
+                    }
+                }
+            }
+        })
+    }
+
+
+    OutlinedIconButton(
+        onClick = {
+            facebookLogin()
+        },
+        colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Transparent),
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.size(dimens.buttonWidth + 5.dp, dimens.buttonHeight + 20.dp)
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.facebook),
+            contentDescription = "Facebook Logo",
+            tint = Color(0xFF5890FF),
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+
+@Composable
 fun Login(
     navController: NavController,
-    authviewmodel: AuthViewModel
+    authviewmodel: AuthViewModel = hiltViewModel(),
+    loginviewmodel: LoginViewModel = hiltViewModel()
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         val (username, setUsername) = remember { mutableStateOf("") }
         val (password, setPassword) = remember { mutableStateOf("") }
+        var passwordvisibility by remember { mutableStateOf(false) }
         val color = if (isSystemInDarkTheme()) alterblack else Color.White
         val token = stringResource(R.string.client_id)
         val user by authviewmodel.user.observeAsState()
         val context = LocalContext.current
+        val icon = if (passwordvisibility) painterResource(id = R.drawable.eye) else painterResource(id = R.drawable.lock)
+        var clicked by remember { mutableStateOf(false) }
+        val keyboardController = LocalSoftwareKeyboardController.current
+        val loginresult = loginviewmodel.loginresult.observeAsState()
+        var requestreceived by remember { mutableStateOf(false) }
+        var isLoading by remember { mutableStateOf(false) }
+
+        LaunchedEffect (clicked) {
+            if(clicked) {
+                val loginrequest = LoginReq(username, password)
+                loginviewmodel.login(loginrequest)
+                clicked = false
+                requestreceived = true
+            }
+        }
 
         val launcher = rememberfirebaselauncher(
             onAuthComplete = { result ->
-                authviewmodel.setUser(result.user)
+                authviewmodel.setUser(result)
             },
             onAuthError = {
                 authviewmodel.setUser(null)
@@ -180,12 +278,19 @@ fun Login(
                         value = password,
                         onValueChange = setPassword,
                         trailingIcon = {
-                            Icon(
-                                painter = painterResource(R.drawable.lock),
-                                contentDescription = null,
-                                modifier = Modifier.size(15.dp)
-                            )
+                            IconButton(
+                                onClick = {
+                                    passwordvisibility = !passwordvisibility
+                                }
+                            ) {
+                                Icon(
+                                    painter = icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                            }
                         },
+                        visualTransformation = if (passwordvisibility) VisualTransformation.None else PasswordVisualTransformation(),
                         color = color,
                         modifier = Modifier.constrainAs(inputPassword) {
                             top.linkTo(inputUsername.bottom, margin = 30.dp)
@@ -211,26 +316,47 @@ fun Login(
                         )
                     }
 
-                    Button(
-                        onClick = {
-                            navController.navigate(route = Screens.Home.route)
-                        },
-                        modifier = Modifier.constrainAs(signInButton) {
-                            top.linkTo(recoverPassword.bottom, margin = 20.dp)
-                            start.linkTo(parent.start)
-                            end.linkTo(parent.end)
-                            width = Dimension.percent(0.8f)
-                        }.height(dimens.buttonHeight),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = backgroundcolor,
-                            contentColor = secondarycolor
-                        )
-                    ) {
-                        Text(
-                            "Sign In",
-                            fontSize = dimens.buttontext
-                        )
+                    if (!isLoading ) {
+                        Button(
+                            onClick = {
+                                if (username.isNotEmpty() && password.isNotEmpty()) {
+                                    clicked = true
+                                    keyboardController?.hide()
+                                }
+                            },
+                            modifier = Modifier
+                                .constrainAs(signInButton) {
+                                    top.linkTo(recoverPassword.bottom, margin = 20.dp)
+                                    start.linkTo(parent.start)
+                                    end.linkTo(parent.end)
+                                    width = Dimension.percent(0.8f)
+                                }
+                                .height(dimens.buttonHeight),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = backgroundcolor,
+                                contentColor = secondarycolor
+                            )
+                        ) {
+                            Text(
+                                "Sign In",
+                                fontSize = dimens.buttontext
+                            )
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                            .constrainAs(signInButton) {
+                                top.linkTo(recoverPassword.bottom, margin = 20.dp)
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                width = Dimension.percent(0.8f)
+                            }
+                            .height(dimens.buttonHeight),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
 
                     // Divider row with "Or Continue With" text
@@ -262,21 +388,14 @@ fun Login(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        OutlinedIconButton(
-                            onClick = {
-
+                        CustomFacebookSignInButton(
+                            onSignedIn = {
+                                navController.navigate(route = Screens.Home.route)
                             },
-                            colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Transparent),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.size(dimens.buttonWidth + 5.dp, dimens.buttonHeight + 20.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.facebook),
-                                contentDescription = "Facebook Logo",
-                                tint = Color(0xFF5890FF),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                            onSignInFailed = {
+
+                            }
+                        )
 
                         OutlinedIconButton(
                             onClick = {
@@ -301,7 +420,6 @@ fun Login(
                         }
                     }
 
-                    // Register row
                     Row(
                         modifier = Modifier.constrainAs(registerRow) {
                             top.linkTo(socialRow.bottom, margin = 50.dp)
@@ -324,6 +442,25 @@ fun Login(
                     }
                 }
                 AddHeight(40.dp)
+                if(username.isNotEmpty() && password.isNotEmpty() && requestreceived) {
+                    when (val request = loginresult.value) {
+                        is NetworkResponse.Failure -> {
+                            isLoading = false
+                        }
+                        NetworkResponse.Loading -> {
+                            isLoading = true
+                        }
+                        is NetworkResponse.Success -> {
+                            isLoading = false
+                            if (request.data.result) {
+                                navController.navigate(route = Screens.Home.route)
+                            }
+                        }
+                        null -> {
+
+                        }
+                    }
+                }
             }
         } else {
             LaunchedEffect(Unit) {

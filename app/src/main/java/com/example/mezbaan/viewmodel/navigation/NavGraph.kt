@@ -36,7 +36,10 @@ fun NavGraph(
 
         this.composable(
             route = Screens.Signup.route
-        ) { Signup(navController = navController) }
+        ) { Signup(
+            navController = navController,
+            authviewmodel = authviewmodel
+        ) }
 
         this.composable(
             route = Screens.Home.route
@@ -49,8 +52,10 @@ fun NavGraph(
         this.composable (
             route = Screens.Account.route
         ) {
-            Account()
+            Account(
+                navController = navController,
+                authviewmodel = authviewmodel
+            )
         }
-
     }
 }

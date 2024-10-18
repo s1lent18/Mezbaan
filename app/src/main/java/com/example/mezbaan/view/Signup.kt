@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.mezbaan.view
 
 import android.annotation.SuppressLint
@@ -15,11 +17,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Surface
@@ -27,14 +31,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -45,7 +56,10 @@ import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
+import com.example.mezbaan.viewmodel.AuthViewModel
 import com.example.mezbaan.viewmodel.navigation.Screens
+import com.google.android.gms.auth.api.signin.GoogleSignIn.getClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 
 @Composable
 fun Input(
@@ -54,6 +68,7 @@ fun Input(
     onValueChange: (String) -> Unit,
     trailingIcon: (@Composable () -> Unit)? = null,
     color: Color,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
     ) {
     TextField(
@@ -68,6 +83,8 @@ fun Input(
         value = value,
         onValueChange = onValueChange,
         trailingIcon = trailingIcon,
+        visualTransformation = visualTransformation,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = color,
             unfocusedContainerColor = color,
@@ -87,14 +104,28 @@ fun Input(
 
 @Composable
 fun Signup(
-    navController: NavController
+    navController: NavController,
+    authviewmodel : AuthViewModel
 ) {
     Surface {
         val (email, setemail) = remember { mutableStateOf("") }
         val (phonenumber, setphonenumber) = remember { mutableStateOf("") }
+        var passwordvisibility by remember { mutableStateOf(false) }
         val (username, setusername) = remember { mutableStateOf("") }
         val (password, setpassword) = remember { mutableStateOf("") }
         val color = if(isSystemInDarkTheme()) alterblack else Color.White
+        val token = stringResource(R.string.client_id)
+        val context = LocalContext.current
+        val icon = if (passwordvisibility) painterResource(id = R.drawable.eye) else painterResource(id = R.drawable.lock)
+
+        val launcher = rememberfirebaselauncher(
+            onAuthComplete = { result ->
+                authviewmodel.setUser(result)
+            },
+            onAuthError = {
+                authviewmodel.setUser(null)
+            }
+        )
 
         Column(
             modifier = Modifier
@@ -176,11 +207,20 @@ fun Signup(
                     label = "Password",
                     value = password,
                     onValueChange = setpassword,
-                    trailingIcon = { Icon(
-                        painter = painterResource(R.drawable.lock),
-                        contentDescription = null,
-                        modifier = Modifier.size(15.dp)
-                    ) },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                                passwordvisibility = !passwordvisibility
+                            }
+                        ) {
+                            Icon(
+                                painter = icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
+                    },
+                    visualTransformation = if (passwordvisibility) VisualTransformation.None else PasswordVisualTransformation(),
                     color = color,
                     modifier = Modifier
                         .constrainAs(passwordinput) {
@@ -191,7 +231,9 @@ fun Signup(
 
                 )
                 Button(
-                    onClick = {},
+                    onClick = {
+                        navController.navigate(route = Screens.Home.route)
+                    },
                     modifier = Modifier
                         .constrainAs(registerbutton) {
                             top.linkTo(passwordinput.bottom, margin = 30.dp)
@@ -237,22 +279,26 @@ fun Signup(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedIconButton(
-                        onClick = {},
-                        colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Transparent),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.size(dimens.buttonWidth + 5.dp, dimens.buttonHeight + 20.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.facebook),
-                            contentDescription = "Facebook Logo",
-                            tint = Color(0xFF5890FF),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                    CustomFacebookSignInButton(
+                        onSignedIn = {
+                            navController.navigate(route = Screens.Home.route)
+                        },
+                        onSignInFailed = {
+
+                        }
+                    )
 
                     OutlinedIconButton(
-                        onClick = {},
+                        onClick = {
+                            val gso = GoogleSignInOptions
+                                .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                                .requestIdToken(token)
+                                .requestEmail()
+                                .build()
+
+                            val googleSignInClient = getClient(context, gso)
+                            launcher.launch(googleSignInClient.signInIntent)
+                        },
                         colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Transparent),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.size(dimens.buttonWidth + 5.dp, dimens.buttonHeight + 20.dp)

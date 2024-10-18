@@ -5,8 +5,15 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class AuthViewModel : ViewModel() {
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val firebaseAuth : FirebaseAuth
+
+) : ViewModel() {
+
     private val _user = MutableLiveData<FirebaseUser?>()
     val user: LiveData<FirebaseUser?> = _user
 
@@ -15,12 +22,12 @@ class AuthViewModel : ViewModel() {
     }
 
     init {
-        FirebaseAuth.getInstance().addAuthStateListener(authStateListener)
+        firebaseAuth.addAuthStateListener(authStateListener)
     }
 
     override fun onCleared() {
         super.onCleared()
-        FirebaseAuth.getInstance().removeAuthStateListener(authStateListener)
+        firebaseAuth.removeAuthStateListener(authStateListener)
     }
 
     fun setUser(user: FirebaseUser?) {
@@ -28,6 +35,7 @@ class AuthViewModel : ViewModel() {
     }
 
     fun signOut() {
-        FirebaseAuth.getInstance().signOut()
+        firebaseAuth.signOut()
     }
+
 }

@@ -39,4 +39,3 @@ val Typography = Typography(
 val Bebas = FontFamily(
     Font(R.font.bebasneue_regular)
 )
-

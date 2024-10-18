@@ -176,7 +176,9 @@ fun Home(
                                             popUpTo(Screens.Home.route) { inclusive = true }
                                         }
                                     }
-                                    NavigationBarItems.Account -> {}
+                                    NavigationBarItems.Account -> {
+                                        navController.navigate(route = Screens.Account.route)
+                                    }
                                 }
                             },
 
