@@ -119,7 +119,6 @@ fun ImagePickerDialog(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Choose from collection
                     Text(
                         text = "Choose from collection",
                         modifier = Modifier.clickable {
@@ -127,7 +126,6 @@ fun ImagePickerDialog(
                         }.padding(8.dp)
                     )
 
-                    // Choose from gallery
                     Text(
                         text = "Choose from gallery",
                         modifier = Modifier.clickable {
@@ -135,7 +133,6 @@ fun ImagePickerDialog(
                         }.padding(8.dp)
                     )
 
-                    // Choose from camera
                     Text(
                         text = "Choose from camera",
                         modifier = Modifier.clickable {

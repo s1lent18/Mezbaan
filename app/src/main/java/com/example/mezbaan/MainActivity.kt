@@ -2,11 +2,16 @@ package com.example.mezbaan
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.camera.core.ImageCapture.OnImageCapturedCallback
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
+import androidx.camera.view.LifecycleCameraController
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
@@ -32,6 +37,26 @@ class MainActivity : ComponentActivity() {
                 NavGraph(navController = navController)
             }
         }
+    }
+
+    fun takePhoto(
+        controller: LifecycleCameraController,
+        onPhotoTaken: (Bitmap) -> Unit
+    ) {
+        controller.takePicture(
+            ContextCompat.getMainExecutor(applicationContext),
+            object : OnImageCapturedCallback() {
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    super.onCaptureSuccess(image)
+
+                    onPhotoTaken(image.toBitmap())
+                }
+
+                override fun onError(exception: ImageCaptureException) {
+                    super.onError(exception)
+                }
+            }
+        )
     }
 
     private fun hasRequiredPermission() : Boolean {
