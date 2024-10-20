@@ -34,7 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.mezbaan.model.dataprovider.NavigationBarItems
@@ -53,7 +53,7 @@ import com.exyte.animatednavbar.utils.noRippleClickable
 @Composable
 fun Account(
     navController: NavController,
-    authviewmodel: AuthViewModel = hiltViewModel()
+    authviewmodel: AuthViewModel = viewModel()
 ) {
     val user by authviewmodel.user.observeAsState()
     val navigationBarItems = remember { NavigationBarItems.entries }

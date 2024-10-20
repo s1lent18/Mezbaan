@@ -56,7 +56,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mezbaan.R
 import com.example.mezbaan.model.dataclasses.LoginReq
@@ -183,8 +184,8 @@ fun CustomFacebookSignInButton(
 @Composable
 fun Login(
     navController: NavController,
-    authviewmodel: AuthViewModel = hiltViewModel(),
-    loginviewmodel: LoginViewModel = hiltViewModel()
+    authviewmodel: AuthViewModel = viewModel(),
+    loginviewmodel: LoginViewModel = viewModel()
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         val (username, setUsername) = remember { mutableStateOf("") }
@@ -244,7 +245,6 @@ fun Login(
                         }
                     )
 
-                    // Welcome back text
                     Text(
                         "Welcome Back you've been missed!",
                         fontSize = dimens.fontsize,
@@ -258,7 +258,6 @@ fun Login(
                         }
                     )
 
-                    // Username input field
                     Input(
                         label = "Enter Username",
                         value = username,
@@ -272,7 +271,6 @@ fun Login(
                         }
                     )
 
-                    // Password input field
                     Input(
                         label = "Password",
                         value = password,
@@ -359,7 +357,6 @@ fun Login(
                         }
                     }
 
-                    // Divider row with "Or Continue With" text
                     Row(
                         modifier = Modifier.constrainAs(dividerRow) {
                             top.linkTo(signInButton.bottom, margin = 30.dp)
@@ -377,7 +374,6 @@ fun Login(
                         HorizontalDivider(modifier = Modifier.weight(1f), color = Color.Gray)
                     }
 
-                    // Social media login buttons (Facebook & Email)
                     Row(
                         modifier = Modifier.constrainAs(socialRow) {
                             top.linkTo(dividerRow.bottom, margin = 40.dp)
@@ -444,21 +440,15 @@ fun Login(
                 AddHeight(40.dp)
                 if(username.isNotEmpty() && password.isNotEmpty() && requestreceived) {
                     when (val request = loginresult.value) {
-                        is NetworkResponse.Failure -> {
-                            isLoading = false
-                        }
-                        NetworkResponse.Loading -> {
-                            isLoading = true
-                        }
+                        is NetworkResponse.Failure -> isLoading = false
+                        NetworkResponse.Loading -> isLoading = true
                         is NetworkResponse.Success -> {
                             isLoading = false
                             if (request.data.result) {
                                 navController.navigate(route = Screens.Home.route)
                             }
                         }
-                        null -> {
-
-                        }
+                        null -> { /* No request made yet */ }
                     }
                 }
             }

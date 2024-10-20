@@ -4,19 +4,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mezbaan.model.api.LoginApi
+import com.example.mezbaan.model.api.RetrofitInstance
 import com.example.mezbaan.model.dataclasses.LoginHandle
 import com.example.mezbaan.model.dataclasses.LoginReq
 import com.example.mezbaan.model.response.NetworkResponse
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class LoginViewModel @Inject constructor(
-    private val loginApi: LoginApi
-) : ViewModel() {
+class LoginViewModel : ViewModel() {
 
+    private val loginApi = RetrofitInstance.loginapi
     private val _loginresult = MutableLiveData<NetworkResponse<LoginHandle>>()
     val loginresult: LiveData<NetworkResponse<LoginHandle>> = _loginresult
 
