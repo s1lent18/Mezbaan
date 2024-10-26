@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.example.mezbaan.view.Account
+import com.example.mezbaan.view.Caterers
 import com.example.mezbaan.view.Login
 import com.example.mezbaan.view.Signup
 import com.example.mezbaan.view.Home
@@ -15,7 +16,6 @@ import com.example.mezbaan.view.Venues
 fun NavGraph(
     navController: NavHostController
 ) {
-
     NavHost(navController = navController, startDestination = Screens.Landing.route) {
 
         this.composable(
@@ -40,7 +40,11 @@ fun NavGraph(
 
         this.composable(
             route = Screens.Venues.route
-        ) { Venues(/*navController = navController*/) }
+        ) { Venues() }
+
+        this.composable(
+            route = Screens.Caterers.route
+        ) { Caterers() }
 
         this.composable (
             route = Screens.Account.route

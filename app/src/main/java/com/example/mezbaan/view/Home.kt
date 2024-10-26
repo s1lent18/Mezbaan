@@ -51,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -63,6 +64,7 @@ import androidx.navigation.NavController
 import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mezbaan.R
+import com.example.mezbaan.model.dataprovider.BookingOptions
 import com.example.mezbaan.model.dataprovider.NavigationBarItems
 import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor
@@ -78,7 +80,7 @@ import com.exyte.animatednavbar.utils.noRippleClickable
 
 @Composable
 fun Itemstobook(
-    image: Painter,
+    image: Any,
     text : String,
     isSelected : Boolean = false,
     onclick: () -> Unit
@@ -96,13 +98,21 @@ fun Itemstobook(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(5.dp)
         ) {
-            Icon(
-                painter = image,
-                contentDescription = null,
-                tint = if (isSelected) Color.White else if(isSystemInDarkTheme()) Color.White else Color.Black,
-                modifier = Modifier.size(dimens.iconsize)
-            )
-            //AddHeight(10.dp)
+            if (image is Painter) {
+                Icon(
+                    painter = image,
+                    contentDescription = null,
+                    tint = if (isSelected) Color.White else if (isSystemInDarkTheme()) Color.White else Color.Black,
+                    modifier = Modifier.size(dimens.iconsize)
+                )
+            } else if (image is ImageVector) {
+                Icon(
+                    imageVector = image,
+                    contentDescription = null,
+                    tint = if (isSelected) Color.White else if (isSystemInDarkTheme()) Color.White else Color.Black,
+                    modifier = Modifier.size(dimens.iconsize)
+                )
+            }
             Text(text, fontSize = dimens.buttontext)
         }
     }
@@ -206,7 +216,6 @@ fun Home(
         var searchQuery by remember { mutableStateOf("") }
         val suggestions = listOf("Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape", "Honeydew")
 
-        // Filtered list based on the search query
         val filteredSuggestions = remember(searchQuery) {
             if (searchQuery.isNotEmpty()) {
                 suggestions.filter { it.contains(searchQuery, ignoreCase = true) }
@@ -221,7 +230,7 @@ fun Home(
                 .padding(bottom = 40.dp)
         ) {
             item {
-                // The entire ConstraintLayout section is now inside a LazyColumn
+
                 ConstraintLayout(
                     modifier = Modifier
                         .fillMaxSize()
@@ -280,7 +289,6 @@ fun Home(
                             exit = fadeOut() + shrinkHorizontally()
                         ) {
                             Column {
-                                // When the icon is clicked, show the search bar
                                 TextField(
                                     value = searchQuery,
                                     onValueChange = { searchQuery = it },
@@ -359,33 +367,12 @@ fun Home(
                         },
                         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
                     ) {
-                        item {
+                        items(BookingOptions.size) { option ->
                             Itemstobook(
-                                image = painterResource(R.drawable.banquet),
-                                text = "Venues",
-                                isSelected = selectedOption.value == "Venues",
-                                onclick = { selectedOption.value = "Venues" }
-                            )
-                            AddWidth(dimens.scrollspacer)
-                            Itemstobook(
-                                image = painterResource(R.drawable.food),
-                                text = "Caterers",
-                                isSelected = selectedOption.value == "Caterers",
-                                onclick = { selectedOption.value = "Caterers" }
-                            )
-                            AddWidth(dimens.scrollspacer)
-                            Itemstobook(
-                                image = painterResource(R.drawable.decor),
-                                text = "Decorators",
-                                isSelected = selectedOption.value == "Decorators",
-                                onclick = { selectedOption.value = "Decorators" }
-                            )
-                            AddWidth(dimens.scrollspacer)
-                            Itemstobook(
-                                image = painterResource(R.drawable.servicevendor),
-                                text = "Vendors",
-                                isSelected = selectedOption.value == "Vendors",
-                                onclick = { selectedOption.value = "Vendors" }
+                                image = painterResource(BookingOptions[option].first),
+                                text = BookingOptions[option].second,
+                                isSelected = selectedOption.value == BookingOptions[option].second,
+                                onclick = { selectedOption.value = BookingOptions[option].second }
                             )
                             AddWidth(dimens.scrollspacer)
                         }
@@ -428,6 +415,17 @@ fun Home(
                                     text = "Santorini",
                                     onclick = {
                                         navController.navigate(route = Screens.Venues.route)
+                                    }
+                                )
+                            }
+                        }
+                        else if (selectedOption.value == "Caterers") {
+                            item {
+                                Cards(
+                                    image = painterResource(R.drawable.food),
+                                    text = "Santorini",
+                                    onclick = {
+                                        navController.navigate(route = Screens.Caterers.route)
                                     }
                                 )
                             }
