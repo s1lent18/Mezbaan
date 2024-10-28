@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.camera.video)
     implementation(libs.androidx.camera.view)
     implementation(libs.androidx.camera.extensions)
+    implementation(libs.datetime)
     implementation(libs.retrofit)
     implementation(libs.androidx.ui)
     //implementation(libs.hilt.android)
