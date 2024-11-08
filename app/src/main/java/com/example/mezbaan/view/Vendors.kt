@@ -1,0 +1,580 @@
+package com.example.mezbaan.view
+
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.MonetizationOn
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ThumbUpAlt
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
+import coil.compose.rememberAsyncImagePainter
+import com.example.mezbaan.R
+import com.example.mezbaan.ui.theme.Bebas
+import com.example.mezbaan.ui.theme.alterblack
+import com.example.mezbaan.ui.theme.backgroundcolor
+import com.example.mezbaan.ui.theme.dimens
+import com.example.mezbaan.ui.theme.secondarycolor
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
+import com.vanpra.composematerialdialogs.datetime.date.datepicker
+import com.vanpra.composematerialdialogs.datetime.time.TimePickerDefaults
+import com.vanpra.composematerialdialogs.datetime.time.timepicker
+import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+
+@Composable
+fun MediaRep(
+    image: Any,
+    isSelected : Boolean = false,
+    onclick: () -> Unit
+) {
+    FloatingActionButton(
+        onClick = onclick,
+        modifier = Modifier
+            .height(dimens.scroll)
+            .width(dimens.scrollwidth),
+        containerColor = if (isSelected) backgroundcolor else if(isSystemInDarkTheme()) alterblack else Color.White,
+        contentColor = if (isSelected) Color.White else if(isSystemInDarkTheme()) Color.White else Color.Black
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Image(
+                painter = rememberAsyncImagePainter(image),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+fun Vendors() {
+    Surface {
+        val context = LocalContext.current
+        val today = LocalDate.now()
+        val dateList = List(30) { today.plusDays(it.toLong()) }
+        val selected = remember { mutableStateOf(false) }
+        val butcolor = if (selected.value) secondarycolor else Color.White
+        val buttext = if (selected.value) "Liked" else "Like"
+        val dateDialogState = rememberMaterialDialogState()
+        val timeDialogState = rememberMaterialDialogState()
+        var pickeddate by remember { mutableStateOf(LocalDate.now()) }
+        var pickedtime by remember { mutableStateOf(LocalTime.NOON) }
+        val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
+        val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm").format(pickedtime) } }
+        var information by rememberSaveable { mutableStateOf(false) }
+        val bottomSheetState = rememberModalBottomSheetState()
+        var isSheetopen by rememberSaveable { mutableStateOf(false) }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 40.dp),
+
+        ) {
+            ConstraintLayout(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                val (heading, pp, name, media) = createRefs()
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(fraction = 0.35f)
+                        .background(backgroundcolor)
+                        .constrainAs(heading) {
+                            top.linkTo(parent.top)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        },
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(model = "https://drive.google.com/uc?export=view&id=1m4vKsUBL3Cnwkb7QS1Yjx8j-N9ktu17j"),
+                            contentDescription = "Profile Picture",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .offset(y = (-70).dp)
+                        .constrainAs(pp) {
+                            top.linkTo(heading.bottom, margin = 20.dp)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                            width = Dimension.percent(0.9f)
+                        },
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(model = "https://drive.google.com/uc?export=view&id=1Gae9YMksmUfU74cgXX0x1ivwOdLb4H4L"),
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .border(4.dp, Color.White, CircleShape)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    Button(
+                        modifier = Modifier
+                            .height(50.dp)
+                            .offset(y = (20).dp),
+                        onClick = {
+                            selected.value = !selected.value
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = backgroundcolor,
+                            contentColor = secondarycolor
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.ThumbUpAlt,
+                            contentDescription = null,
+                            tint = butcolor
+                        )
+                        AddWidth(5.dp)
+                        Text(buttext)
+                    }
+                }
+
+                Column (
+                    modifier = Modifier
+                        .constrainAs(name) {
+                        top.linkTo(pp.bottom, margin = (-40).dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        width = Dimension.percent(0.9f)
+                    },
+
+                ) {
+                    Text(
+                        text = "Photographer Name",
+                        fontFamily = Bebas,
+                        fontSize = dimens.heading
+                    )
+                    AddHeight(20.dp)
+                    Text(
+                        text = "I am a cool photographer and I take very good pictures",
+                        fontFamily = Bebas,
+                        fontSize = dimens.fontsize
+                    )
+                }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .constrainAs(media) {
+                            top.linkTo(name.bottom, margin = 30.dp)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                            width = Dimension.percent(0.9f)
+                            bottom.linkTo(parent.bottom, margin = 20.dp)
+                            height = Dimension.fillToConstraints
+                        },
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item {
+                        Row (
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Icon(Icons.Default.Star, contentDescription = null, tint = secondarycolor)
+                            Icon(Icons.Default.Star, contentDescription = null, tint = secondarycolor)
+                            Icon(Icons.Default.Star, contentDescription = null, tint = secondarycolor)
+                            Icon(Icons.Default.Star, contentDescription = null, tint = secondarycolor)
+                            Icon(Icons.Default.Star, contentDescription = null, tint = secondarycolor)
+                            AddWidth(80.dp)
+                            Card (
+                                colors = CardDefaults.cardColors(
+                                    containerColor = backgroundcolor,
+                                    contentColor = secondarycolor
+                                ),
+                                elevation = CardDefaults.cardElevation(10.dp),
+                                shape = RoundedCornerShape(5.dp)
+                            ) {
+                                Text("26 Reviews", modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
+                            }
+                        }
+                        AddHeight(30.dp)
+                        Row (
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Row (
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.MonetizationOn,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    AddWidth(10.dp)
+                                    Text("25000Rs", fontSize = dimens.buttontext)
+                                }
+                                AddHeight(5.dp)
+                                Text("per hour", fontSize = dimens.buttontext)
+                            }
+                            VerticalDivider(color = secondarycolor, modifier = Modifier.fillMaxHeight(fraction = 0.6f))
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Row (
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.servicevendor),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    AddWidth(10.dp)
+                                    Text("250", fontSize = dimens.buttontext)
+                                }
+                                AddHeight(5.dp)
+                                Text("Events done", fontSize = dimens.buttontext)
+                            }
+                        }
+                        AddHeight(30.dp)
+                        Row (
+                            modifier = Modifier.fillMaxWidth(fraction = 0.6f),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(backgroundcolor)
+                            ) {
+                                IconButton(onClick = {
+                                    val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
+                                        data = Uri.parse("mailto:")
+                                        putExtra(Intent.EXTRA_EMAIL, arrayOf("mezbaan30@gmail.com"))
+                                        putExtra(Intent.EXTRA_SUBJECT, "Subject Text")
+                                    }
+
+                                    if (emailIntent.resolveActivity(context.packageManager) != null) {
+                                        context.startActivity(emailIntent)
+                                    }
+
+                                    val gmailPackage = "com.google.android.gm"
+                                    if (context.packageManager.getLaunchIntentForPackage(gmailPackage) != null) {
+                                        emailIntent.setPackage(gmailPackage)
+                                    }
+
+                                    if (emailIntent.resolveActivity(context.packageManager) != null) {
+                                        context.startActivity(emailIntent)
+                                    } else {
+                                        context.startActivity(Intent.createChooser(emailIntent, "Send Email"))
+                                    }
+                                }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.mail),
+                                        contentDescription = null
+                                    )
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(backgroundcolor)
+                            ) {
+                                IconButton(onClick = {
+                                    val facebookUri = Uri.parse("https://www.facebook.com/iirfanjunejo")
+                                    val facebookIntent = Intent(Intent.ACTION_VIEW, facebookUri).apply {
+                                        setPackage("com.facebook.katana")
+                                    }
+
+                                    if (facebookIntent.resolveActivity(context.packageManager) != null) {
+                                        context.startActivity(facebookIntent)
+                                    } else {
+                                        context.startActivity(Intent(Intent.ACTION_VIEW, facebookUri))
+                                    }
+                                }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.facebook),
+                                        contentDescription = null
+                                    )
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(backgroundcolor)
+                            ) {
+                                IconButton(onClick = {
+                                    val instaURL = Uri.parse("https://www.instagram.com/irfanjunejo?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==")
+                                    val intent = Intent(Intent.ACTION_VIEW, instaURL).apply {
+                                        setPackage("com.instagram.android")
+                                    }
+                                    if (intent.resolveActivity(context.packageManager) != null) {
+                                        context.startActivity(intent)
+                                    } else {
+                                        val webIntent = Intent(Intent.ACTION_VIEW, instaURL)
+                                        context.startActivity(webIntent)
+                                    }
+                                }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.instagram),
+                                        contentDescription = null
+                                    )
+                                }
+                            }
+                        }
+                        AddHeight(30.dp)
+                        Text("Samples", fontFamily = Bebas, fontSize = dimens.labeltext)
+
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
+                        ) {
+                            items(5) {
+                                MediaRep(
+                                    image = "https://cdn.expertphotography.com/wp-content/uploads/2021/08/Become-Professional-Photographer-Colin-Lloyd.jpg",
+                                    onclick = {}
+                                )
+                                AddWidth(dimens.scrollspacer)
+                            }
+                        }
+                        AddHeight(30.dp)
+                        Column(
+                            modifier = Modifier
+                                .height(50.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Button(
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                onClick = { isSheetopen = true },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = secondarycolor,
+                                    contentColor = backgroundcolor
+                                ),
+                                shape = RoundedCornerShape(5.dp)
+                            ) {
+                                Text("Book")
+                            }
+                        }
+                    }
+                }
+
+                if (isSheetopen) {
+                    ModalBottomSheet(
+                        sheetState = bottomSheetState,
+                        onDismissRequest = {
+                            isSheetopen = false
+                        },
+                        containerColor = backgroundcolor
+                    ) {
+                        Column (
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight()
+                                .navigationBarsPadding(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Top
+                        ) {
+                            Row (
+                                modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Funca(text = formatteddate, icon = Icons.Default.CalendarMonth)
+                                IconButton(
+                                    onClick = { dateDialogState.show() }
+                                ) {
+                                    Icon(
+                                        Icons.Default.CalendarMonth,
+                                        contentDescription = null,
+                                        tint = Color.Yellow
+                                    )
+                                }
+                            }
+                            AddHeight(20.dp)
+                            Row (
+                                modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Funca(text = formattedtime, icon = Icons.Default.AccessTime)
+                                IconButton(
+                                    onClick = { timeDialogState.show() }
+                                ) {
+                                    Icon(
+                                        Icons.Default.AccessTime,
+                                        contentDescription = null,
+                                        tint = Color.Yellow
+                                    )
+                                }
+                            }
+                            AddHeight(20.dp)
+                            AddHeight(30.dp)
+                            Button(
+                                onClick = { information = true },
+                                modifier = Modifier
+                                    .fillMaxWidth(fraction = 0.85f)
+                                    .height(50.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = secondarycolor,
+                                    contentColor = backgroundcolor
+                                ),
+                                shape = RoundedCornerShape(5.dp)
+                            ) {
+                                Text("Confirm Booking")
+                            }
+                        }
+                    }
+                    MaterialDialog (
+                        dialogState = dateDialogState,
+                        properties = DialogProperties(
+
+                        ),
+                        backgroundColor = backgroundcolor,
+                        buttons = {
+                            positiveButton(
+                                "ok",
+                                textStyle = TextStyle(color = secondarycolor)
+                            )
+                        }
+                    ) {
+                        datepicker(
+                            initialDate = LocalDate.now(),
+                            title = "Pick a date",
+                            colors = DatePickerDefaults.colors(
+                                headerBackgroundColor = secondarycolor,
+                                headerTextColor = backgroundcolor,
+                                calendarHeaderTextColor = secondarycolor,
+                                dateActiveBackgroundColor = secondarycolor,
+                                dateActiveTextColor = backgroundcolor,
+                                dateInactiveTextColor = secondarycolor
+                            ),
+                            allowedDateValidator = { date ->
+                                date in dateList
+                            }
+                        ) {
+                            pickeddate = it
+                        }
+                    }
+                    MaterialDialog (
+                        dialogState = timeDialogState,
+                        properties = DialogProperties(
+
+                        ),
+                        backgroundColor = backgroundcolor,
+                        buttons = {
+                            positiveButton(
+                                "ok",
+                                textStyle = TextStyle(color = secondarycolor)
+                            )
+                        }
+                    ) {
+                        timepicker(
+                            initialTime = LocalTime.NOON,
+                            title = "Pick a time",
+                            colors = TimePickerDefaults.colors(
+                                headerTextColor = secondarycolor,
+                                selectorTextColor = backgroundcolor,
+                                selectorColor = secondarycolor,
+                                activeBackgroundColor = secondarycolor,
+                                activeTextColor = backgroundcolor,
+                                inactiveTextColor = secondarycolor
+                            ),
+                            is24HourClock = true
+                        ) {
+                            pickedtime = it
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

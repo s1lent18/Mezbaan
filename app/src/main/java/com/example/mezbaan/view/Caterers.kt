@@ -1,5 +1,6 @@
 package com.example.mezbaan.view
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,9 +22,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -59,9 +62,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
@@ -89,7 +95,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
 @Composable
-fun CartItemRow(item: CartItems) {
+fun CartItemRow(item: CartItems, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -115,7 +121,24 @@ fun CartItemRow(item: CartItems) {
             Text(text = item.title, fontFamily = Bebas, color = secondarycolor)
             Text("${item.rate}rs per head", fontFamily = Bebas, color = secondarycolor)
         }
+
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(secondarycolor)
+        ) {
+            IconButton(
+                onClick = onClick
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = backgroundcolor
+                )
+            }
+        }
     }
+
 }
 
 @Composable
@@ -144,7 +167,7 @@ fun Display(imageUrl: String, title: String, addtocart: () -> Unit) {
             )
         }
         AddHeight(10.dp)
-        Text(title)
+        Text(title, fontFamily = Bebas, fontSize = 25.sp)
 
         if(opendialog) {
             DialogFood(
@@ -230,6 +253,7 @@ fun DialogFood(
 @Composable
 fun Caterers() {
     Surface {
+        val context = LocalContext.current
         val dateDialogState = rememberMaterialDialogState()
         val timeDialogState = rememberMaterialDialogState()
         var pickeddate by remember { mutableStateOf(LocalDate.now()) }
@@ -249,7 +273,7 @@ fun Caterers() {
         val filteredItems = if (searchQuery.isNotEmpty()) {
             when (selectedOption.value) {
                 "Appetizers" -> AppetizersOption.filter { it.second.contains(searchQuery, ignoreCase = true) }
-                "Main-Course" -> MainCourseOptions.filter { it.second.contains(searchQuery, ignoreCase = true) }
+                "Main\nCourse" -> MainCourseOptions.filter { it.second.contains(searchQuery, ignoreCase = true) }
                 "Desserts" -> DessertsOption.filter { it.second.contains(searchQuery, ignoreCase = true) }
                 "Drinks" -> DrinksOptions.filter { it.second.contains(searchQuery, ignoreCase = true) }
                 else -> emptyList()
@@ -257,7 +281,7 @@ fun Caterers() {
         } else {
             when (selectedOption.value) {
                 "Appetizers" -> AppetizersOption
-                "Main-Course" -> MainCourseOptions
+                "Main\nCourse" -> MainCourseOptions
                 "Desserts" -> DessertsOption
                 "Drinks" -> DrinksOptions
                 else -> emptyList()
@@ -267,7 +291,6 @@ fun Caterers() {
         fun addToCart(item: CartItems) {
             cartItems = cartItems.toMutableList().apply {
                 add(item)
-                println(cartItems.size)
             }
         }
 
@@ -280,7 +303,7 @@ fun Caterers() {
             ConstraintLayout(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 80.dp, bottom = 40.dp)
+                    .padding(top = 80.dp, bottom = 20.dp)
             ) {
                 val (searchrow, catheading, boxes, fooditems, checkoutbutton) = createRefs()
 
@@ -366,10 +389,10 @@ fun Caterers() {
 
                 Box(
                     modifier = Modifier.constrainAs(fooditems) {
-                        top.linkTo(boxes.bottom, margin = 20.dp)
+                        top.linkTo(boxes.bottom)
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
-                        bottom.linkTo(checkoutbutton.top, margin = 50.dp)
+                        bottom.linkTo(checkoutbutton.top, margin = 5.dp)
                         height = Dimension.percent(0.45f)
                     }
                 ) {
@@ -377,7 +400,7 @@ fun Caterers() {
                         columns = GridCells.Fixed(2),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(16.dp)
+                        contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
                         items(filteredItems.size) { option ->
                             Display(
@@ -406,7 +429,11 @@ fun Caterers() {
                 ) {
                     Button(
                         onClick = {
-                            isSheetopen = true
+                            if (cartItems.isNotEmpty()) {
+                                isSheetopen = true
+                            } else {
+                                Toast.makeText(context, "No Items Selected", Toast.LENGTH_SHORT).show()
+                            }
                         },
                         modifier = Modifier
                             .size(65.dp),
@@ -460,7 +487,14 @@ fun Caterers() {
                                 modifier = Modifier.fillMaxWidth(fraction = 0.9f)
                             ) {
                                 items(cartItems.size) { item ->
-                                    CartItemRow(cartItems[item])
+                                    CartItemRow(cartItems[item], onClick = {
+                                        cartItems = cartItems.toMutableList().apply {
+                                            removeAt(item)
+                                        }
+                                        if (cartItems.isEmpty()) {
+                                            isSheetopen = false
+                                        }
+                                    })
                                 }
                             }
 
@@ -493,7 +527,24 @@ fun Caterers() {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Funca(text = formatteddate, Icons.Default.CalendarMonth)
+                                Funca(text = "${(sliderpos.roundToInt()) * cartItems.sumOf { it.rate }} ", icon = Icons.Default.CalendarMonth)
+                                IconButton(
+                                    onClick = { information = false }
+                                ) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = null,
+                                        tint = Color.Yellow
+                                    )
+                                }
+                            }
+                            AddHeight(20.dp)
+                            Row (
+                                modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Funca(text = formatteddate, icon = Icons.Default.CalendarMonth)
                                 IconButton(
                                     onClick = { dateDialogState.show() }
                                 ) {
@@ -510,7 +561,7 @@ fun Caterers() {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Funca(text = formattedtime, Icons.Default.AccessTime)
+                                Funca(text = formattedtime, icon = Icons.Default.AccessTime)
                                 IconButton(
                                     onClick = { timeDialogState.show() }
                                 ) {
@@ -522,8 +573,8 @@ fun Caterers() {
                                 }
                             }
                             AddHeight(20.dp)
-                            Funca("Guest count ${sliderpos.roundToInt()}", Icons.Default.Person)
-                            AddHeight(20.dp)
+                            Funca(text ="Guest count ${sliderpos.roundToInt()}", icon = Icons.Default.Person)
+                            AddHeight(10.dp)
                             Slider(
                                 value = sliderpos,
                                 onValueChange = { newValue ->
@@ -552,7 +603,7 @@ fun Caterers() {
                                 }
                             )
 
-                            AddHeight(30.dp)
+                            AddHeight(10.dp)
 
                             Button(
                                 onClick = { information = true },
@@ -577,7 +628,10 @@ fun Caterers() {
                 ),
                 backgroundColor = backgroundcolor,
                 buttons = {
-                    positiveButton("ok")
+                    positiveButton(
+                        "ok",
+                        textStyle = TextStyle(color = secondarycolor)
+                    )
                 }
                 ) {
                     datepicker(
@@ -585,7 +639,11 @@ fun Caterers() {
                         title = "Pick a date",
                         colors = DatePickerDefaults.colors(
                             headerBackgroundColor = secondarycolor,
-                            headerTextColor = backgroundcolor
+                            headerTextColor = backgroundcolor,
+                            calendarHeaderTextColor = secondarycolor,
+                            dateActiveBackgroundColor = secondarycolor,
+                            dateActiveTextColor = backgroundcolor,
+                            dateInactiveTextColor = secondarycolor
                         )
                     ) {
                         pickeddate = it
@@ -598,16 +656,24 @@ fun Caterers() {
                     ),
                     backgroundColor = backgroundcolor,
                     buttons = {
-                        positiveButton("ok")
+                        positiveButton(
+                            "ok",
+                            textStyle = TextStyle(color = secondarycolor)
+                        )
                     }
                 ) {
                     timepicker(
                         initialTime = LocalTime.NOON,
                         title = "Pick a time",
-                        timeRange = LocalTime.MIDNIGHT..LocalTime.NOON,
                         colors = TimePickerDefaults.colors(
-                            headerTextColor = secondarycolor
-                        )
+                            headerTextColor = secondarycolor,
+                            selectorTextColor = backgroundcolor,
+                            selectorColor = secondarycolor,
+                            activeBackgroundColor = secondarycolor,
+                            activeTextColor = backgroundcolor,
+                            inactiveTextColor = secondarycolor
+                        ),
+                        is24HourClock = true
                     ) {
                         pickedtime = it
                     }

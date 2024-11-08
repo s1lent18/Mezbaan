@@ -10,6 +10,7 @@ import com.example.mezbaan.view.Login
 import com.example.mezbaan.view.Signup
 import com.example.mezbaan.view.Home
 import com.example.mezbaan.view.Landing
+import com.example.mezbaan.view.Vendors
 import com.example.mezbaan.view.Venues
 
 @Composable
@@ -53,5 +54,9 @@ fun NavGraph(
                 navController = navController,
             )
         }
+
+        this.composable(
+            route = Screens.Vendors.route
+        ) { Vendors() }
     }
 }

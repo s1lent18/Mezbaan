@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
@@ -33,6 +34,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,6 +58,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,9 +66,12 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.navigation.NavController
 import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
 import com.example.mezbaan.R
 import com.example.mezbaan.model.dataprovider.BookingOptions
 import com.example.mezbaan.model.dataprovider.NavigationBarItems
+import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
@@ -113,13 +119,19 @@ fun Itemstobook(
                     modifier = Modifier.size(dimens.iconsize)
                 )
             }
-            Text(text, fontSize = dimens.buttontext)
+            AddHeight(10.dp)
+            Text(text = text,
+                fontSize = dimens.buttontext,
+                maxLines = 2,
+                overflow = Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.widthIn(max = dimens.scrollwidth - 20.dp))
         }
     }
 }
 
 @Composable
-fun Cards(image: Painter, text: String, onclick: () -> Unit) {
+fun Cards(text: String, onclick: () -> Unit, model: String = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYz8zEAFyjZKTNeQW-MRagzdrD-bTFpArsiA&s") {
     FloatingActionButton(
         onClick = onclick,
         modifier = Modifier
@@ -127,18 +139,40 @@ fun Cards(image: Painter, text: String, onclick: () -> Unit) {
             .aspectRatio(0.65f),
         containerColor = backgroundcolor
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box (
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                painter = image,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(dimens.iconsize)
+            val painter = rememberAsyncImagePainter(model = model)
+            val imageState = painter.state
+            Image(
+                painter = painter,
+                contentDescription = "Profile Picture",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
             )
-            AddHeight(10.dp)
-            Text(text, color = Color.White, fontSize = dimens.buttontext)
+
+            if (imageState is AsyncImagePainter.State.Loading) {
+                CircularProgressIndicator(
+                    color = Color.White,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .align(Alignment.Center)
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp),
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(text, color = Color.White, fontSize = dimens.labeltext, fontFamily = Bebas)
+                }
+            }
         }
     }
 }
@@ -180,12 +214,18 @@ fun Home(
                                 when (item) {
                                     NavigationBarItems.Home -> {
                                     }
+
+                                    NavigationBarItems.Msg -> {
+
+                                    }
+
                                     NavigationBarItems.Logout -> {
                                         authviewmodel.signOut()
                                         navController.navigate(Screens.Login.route) {
-                                            popUpTo(Screens.Home.route) { inclusive = true }
+                                            popUpTo(0) { inclusive = true }
                                         }
                                     }
+
                                     NavigationBarItems.Account -> {
                                         navController.navigate(route = Screens.Account.route)
                                     }
@@ -370,7 +410,7 @@ fun Home(
                         items(BookingOptions.size) { option ->
                             Itemstobook(
                                 image = painterResource(BookingOptions[option].first),
-                                text = BookingOptions[option].second,
+                                text = if (BookingOptions[option].second == "Photographers") "Photo\ngraphers" else BookingOptions[option].second,
                                 isSelected = selectedOption.value == BookingOptions[option].second,
                                 onclick = { selectedOption.value = BookingOptions[option].second }
                             )
@@ -408,26 +448,50 @@ fun Home(
                         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(dimens.scrollspacer)
                     ) {
-                        if (selectedOption.value == "Venues") {
-                            item {
-                                Cards(
-                                    image = painterResource(R.drawable.hotel),
-                                    text = "Santorini",
-                                    onclick = {
-                                        navController.navigate(route = Screens.Venues.route)
-                                    }
-                                )
+                        when (selectedOption.value) {
+                            "Venues" -> {
+                                item {
+                                    Cards(
+                                        model = "https://drive.google.com/uc?export=view&id=1-M2iriYaun_6875iCrDpAaRCE1ojbnpT",
+                                        text = "The Corum",
+                                        onclick = {
+                                            navController.navigate(route = Screens.Venues.route)
+                                        }
+                                    )
+                                }
                             }
-                        }
-                        else if (selectedOption.value == "Caterers") {
-                            item {
-                                Cards(
-                                    image = painterResource(R.drawable.food),
-                                    text = "Santorini",
-                                    onclick = {
-                                        navController.navigate(route = Screens.Caterers.route)
-                                    }
-                                )
+                            "Caterers" -> {
+                                item {
+                                    Cards(
+                                        model = "https://drive.google.com/uc?export=view&id=1hS4R5zDqGr2aMiPY8SSzjy-1isAqUgBq",
+                                        text = "Lal Qila",
+                                        onclick = {
+                                            navController.navigate(route = Screens.Caterers.route)
+                                        }
+                                    )
+                                }
+                            }
+                            "Decorators" -> {
+                                item {
+                                    Cards(
+                                        model = "https://drive.google.com/uc?export=view&id=1qzCG3vIVY9uyP-g5ZsGJFfMcP36cHuJi",
+                                        text = "Indo",
+                                        onclick = {
+                                            navController.navigate(route = Screens.Decorators.route)
+                                        }
+                                    )
+                                }
+                            }
+                            "Photographers" -> {
+                                item {
+                                    Cards(
+                                        model = "https://drive.google.com/uc?export=view&id=1Gae9YMksmUfU74cgXX0x1ivwOdLb4H4L",
+                                        text = "Irfan Junejo",
+                                        onclick = {
+                                            navController.navigate(route = Screens.Vendors.route)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -458,7 +522,7 @@ fun Home(
                         if (selectedOption.value == "Venues") {
                             item {
                                 Cards(
-                                    image = painterResource(R.drawable.hotel),
+                                    model = "https://drive.google.com/uc?export=view&id=1-M2iriYaun_6875iCrDpAaRCE1ojbnpT",
                                     text = "Santorini",
                                     onclick = {
                                         navController.navigate(route = Screens.Venues.route)
@@ -466,7 +530,7 @@ fun Home(
                                 )
                                 AddWidth(dimens.scrollspacer)
                                 Cards(
-                                    image = painterResource(R.drawable.hotel),
+                                    model = "https://drive.google.com/uc?export=view&id=1-M2iriYaun_6875iCrDpAaRCE1ojbnpT",
                                     text = "Santorini",
                                     onclick = {
                                         navController.navigate(route = Screens.Venues.route)

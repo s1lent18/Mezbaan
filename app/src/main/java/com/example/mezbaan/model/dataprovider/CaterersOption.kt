@@ -8,7 +8,7 @@ import com.example.mezbaan.R
 
 val CaterersOption = listOf(
     Pair(R.drawable.food, "Appetizers"),
-    Pair(Icons.Default.Restaurant, "Main-Course"),
+    Pair(Icons.Default.Restaurant, "Main\nCourse"),
     Pair(Icons.Default.Cake, "Desserts"),
     Pair(Icons.Default.LocalBar, "Drinks")
 )

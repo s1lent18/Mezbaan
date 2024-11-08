@@ -3,23 +3,20 @@ package com.example.mezbaan.view
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -29,6 +26,7 @@ import androidx.compose.material.icons.filled.AccessTimeFilled
 import androidx.compose.material.icons.filled.Brightness3
 import androidx.compose.material.icons.filled.Brightness7
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -38,15 +36,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -56,27 +54,32 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import coil.compose.rememberAsyncImagePainter
 import com.example.mezbaan.R
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
 import com.google.accompanist.flowlayout.FlowRow
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
+import com.vanpra.composematerialdialogs.datetime.date.datepicker
+import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import java.time.LocalDate
-import java.time.YearMonth
 import java.time.format.DateTimeFormatter
-import java.util.Locale
+import kotlin.math.round
 import kotlin.math.roundToInt
 
 @Composable
@@ -90,12 +93,13 @@ fun BusinessCard(managername: String, contact: String, pic: Painter) {
             Text(
                 managername,
                 fontSize = dimens.fontsize,
+                color = secondarycolor
             )
             AddHeight(dimens.small1)
             Text(
                 contact,
                 fontSize = dimens.buttontext,
-                color = Color.Gray
+                color = secondarycolor
             )
         }
         Box (
@@ -114,16 +118,20 @@ fun BusinessCard(managername: String, contact: String, pic: Painter) {
 
 @Composable
 fun Funca(
+    color: Color = secondarycolor,
     text: String,
     icon : ImageVector,
-    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier.fillMaxWidth(fraction = 0.85f).height(50.dp)
+    tcolor: Color = backgroundcolor,
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
+        .fillMaxWidth(fraction = 0.85f)
+        .height(50.dp)
 ) {
     Card(
         modifier = modifier,
         elevation = CardDefaults.cardElevation(10.dp),
         colors = CardDefaults.cardColors(
-            containerColor = secondarycolor,
-            contentColor = backgroundcolor
+            containerColor = color,
+            contentColor = tcolor
         )
     ) {
         Row(
@@ -141,91 +149,15 @@ fun Funca(
 }
 
 @Composable
-fun tailSwitch(
-    onSwitchChange: (Boolean) -> Unit,
-    first: String,
-    second: String
-): Boolean {
-    var check by remember { mutableStateOf(false) }
-
-    Column(
-        modifier = Modifier.padding(8.dp) // Reduced padding
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Switch(
-                checked = check,
-                onCheckedChange = {
-                    check = it
-                    onSwitchChange(it)
-                },
-                colors = SwitchDefaults.colors(
-                    checkedTrackColor = secondarycolor,
-                    checkedThumbColor = backgroundcolor,
-                    uncheckedTrackColor = secondarycolor,
-                    uncheckedThumbColor = backgroundcolor
-                ),
-                modifier = Modifier.scale(0.8f) // Scaled down switch
-            )
-            Spacer(modifier = Modifier.width(4.dp)) // Reduced space
-            Text(
-                text = if (check) first else second,
-                fontSize = 14.sp // Smaller text size
-            )
-        }
-    }
-    return check
-}
-
-
-@Composable
 fun Cardammedity(text : String) {
     Box (
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(Color.LightGray)
+            .background(backgroundcolor)
             .padding(horizontal = 5.dp, vertical = 2.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(text, fontSize = 15.sp, color = Color.Black)
-    }
-}
-
-@Composable
-fun BookingCard(month: String) {
-    Column {
-        Text(text = month, fontSize = 20.sp)
-    }
-}
-
-@Composable
-fun GridOfBoxes(year: Int, month: Int, isday: Boolean, onDateClick: (Int, Int, Int, Boolean) -> Unit) {
-    val days = YearMonth.of(year, month).lengthOfMonth()
-
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(6),
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(16.dp)
-    ) {
-        items(days) { day ->
-            Box(
-                modifier = Modifier
-                    .size(30.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(secondarycolor)
-                    .clickable { onDateClick(day + 1, month, year, isday) },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    (day + 1).toString(),
-                    color = backgroundcolor
-                )
-            }
-        }
+        Text(text, fontSize = 15.sp, color = secondarycolor)
     }
 }
 
@@ -234,20 +166,21 @@ fun GridOfBoxes(year: Int, month: Int, isday: Boolean, onDateClick: (Int, Int, I
 @Composable
 fun Venues() {
     val pics = listOf(
-        R.drawable.mezbaan,
-        R.drawable.b1,
-        R.drawable.b2,
+        "https://drive.google.com/uc?export=view&id=1L9yTLvgUau4U_uR8Bmft89GSrIUr6y9v",
+        "https://drive.google.com/uc?export=view&id=179mOB6_5ewGP6ZiJjy7DGK9pJRg4WzA-",
+        "https://drive.google.com/uc?export=view&id=1TchRSYUcoPdNp_-MGBaFirmmKNTXhTkt"
     )
+    var pickeddate by remember { mutableStateOf(LocalDate.now()) }
+    val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
+    val dateDialogState = rememberMaterialDialogState()
     val pagerState = rememberPagerState(pageCount = { pics.size })
-    val pagerState1 = rememberPagerState(initialPage = 0, pageCount = { 6 })
-    val currentDate = LocalDate.now()
     val bottomSheetState = rememberModalBottomSheetState()
     var sliderpos by remember { mutableFloatStateOf(50.0f) }
     var isSheetopen by rememberSaveable { mutableStateOf(false) }
-    var selectedDate by remember { mutableStateOf<Int?>(null) }
-    var selectedMonth by remember { mutableStateOf<Int?>(null) }
-    var selectedYear by remember { mutableStateOf<Int?>(null) }
     var isDay by rememberSaveable { mutableStateOf(false) }
+    val price = if (!isDay) 400000 else (round((400000 / 1.5f) / 10000) * 10000).toInt()
+    val butcolor = if (isDay) backgroundcolor else secondarycolor
+    val tcolor = if (!isDay) backgroundcolor else secondarycolor
     val stepSize = 25f
     val minValue = 50f
     val maxValue = 1200f
@@ -281,7 +214,7 @@ fun Venues() {
                         key = { pics[it] }
                     ) { index ->
                         Image(
-                            painter = painterResource(id = pics[index]),
+                            painter = rememberAsyncImagePainter(pics[index]),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -318,13 +251,15 @@ fun Venues() {
                             width = Dimension.percent(0.9f)
                             bottom.linkTo(parent.bottom)
                             height = Dimension.fillToConstraints
-                        }
+                        },
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     item {
                         Column {
                             Text(
                                 "Name of the venue",
                                 fontSize = dimens.fontsize,
+                                color = secondarycolor
                             )
                             AddHeight(dimens.small1)
                             Row(
@@ -336,21 +271,23 @@ fun Venues() {
                                 Icon(
                                     Icons.Default.Star,
                                     contentDescription = null,
-                                    modifier = Modifier.size(dimens.iconsize)
+                                    modifier = Modifier.size(dimens.iconsize),
+                                    tint = secondarycolor
                                 )
                                 AddWidth(10.dp)
-                                Text("Rating of the venue", fontSize = dimens.buttontext)
+                                Text("4.5", fontSize = dimens.buttontext, color = secondarycolor)
                             }
                         }
                         AddHeight(dimens.small1)
                         HorizontalDivider(
                             modifier = Modifier.fillMaxWidth(),
-                            color = Color.Gray
+                            color = secondarycolor
                         )
                         AddHeight(dimens.small1)
                         Text(
                             "Amenities",
                             fontSize = dimens.fontsize,
+                            color = secondarycolor
                         )
                         AddHeight(dimens.small1)
                         FlowRow(
@@ -367,102 +304,7 @@ fun Venues() {
                         AddHeight(dimens.small2)
                         HorizontalDivider(
                             modifier = Modifier.fillMaxWidth(),
-                            color = Color.Gray
-                        )
-                        Box (
-                            modifier = Modifier.padding(vertical = 20.dp)
-                        ) {
-                            HorizontalPager(
-                                state = pagerState1,
-                                pageSpacing = 20.dp
-                            ) { page ->
-
-                                val currentMonth = currentDate.plusMonths(page.toLong())
-                                val formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
-                                val formattedDate = currentMonth.format(formatter)
-
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 16.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(backgroundcolor),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth(fraction = 0.9f)
-                                            .fillMaxHeight(fraction = 0.9f),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Column(
-                                            modifier = Modifier.padding(bottom = 30.dp),
-                                            verticalArrangement = Arrangement.SpaceBetween,
-                                        ) {
-                                            Row (
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                BookingCard(month = formattedDate)
-                                                tailSwitch(
-                                                    onSwitchChange = { isDay = it },
-                                                    first = "Day",
-                                                    second = "Night"
-                                                )
-                                            }
-                                            //AddHeight(10.dp)
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(200.dp)
-                                            ) {
-                                                GridOfBoxes(
-                                                    year = currentMonth.year,
-                                                    month = currentMonth.monthValue,
-                                                    isday = isDay,
-                                                    onDateClick = { day, month, year, isday ->
-                                                        isSheetopen = true
-                                                        selectedDate = day
-                                                        selectedMonth = month
-                                                        selectedYear = year
-                                                        isDay = isday
-                                                    }
-                                                )
-                                            }
-                                            AddHeight(10.dp)
-                                        }
-                                    }
-                                }
-                            }
-
-                            Row(
-                                modifier = Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .padding(bottom = 20.dp),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-
-                                repeat(6) { pageIndex ->
-                                    val isSelected = pageIndex == pagerState1.currentPage
-                                    Box(
-                                        modifier = Modifier
-                                            .size(8.dp)
-                                            .clip(CircleShape)
-                                            .background(if (isSelected) secondarycolor else Color.Blue)
-                                            .padding(4.dp)
-                                    )
-                                    if (pageIndex != 5) {
-                                        AddWidth(8.dp)
-                                    }
-                                }
-                            }
-                            AddHeight(20.dp)
-                        }
-                        HorizontalDivider(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = Color.Gray
+                            color = secondarycolor
                         )
                         AddHeight(dimens.small2)
                         BusinessCard(
@@ -473,8 +315,35 @@ fun Venues() {
                         AddHeight(dimens.small2)
                         HorizontalDivider(
                             modifier = Modifier.fillMaxWidth(),
-                            color = Color.Gray
+                            color = secondarycolor
                         )
+                        AddHeight(dimens.small2)
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Price: 400000 up to 800 Guests", color = secondarycolor)
+
+                            Text("Additional 10000 for adding 50 guests", color = secondarycolor)
+                        }
+                        AddHeight(dimens.small2)
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = secondarycolor
+                        )
+                        AddHeight(dimens.small2)
+                        Button(
+                            onClick = { isSheetopen = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = backgroundcolor,
+                                contentColor = secondarycolor
+                            ),
+                            shape = RoundedCornerShape(5.dp)
+                        ) {
+                            Text("Proceed to Booking")
+                        }
                         AddHeight(dimens.small2)
                     }
                 }
@@ -485,77 +354,119 @@ fun Venues() {
                     onDismissRequest = {
                         isSheetopen = false
                     },
-                    containerColor = backgroundcolor
+                    containerColor = if (isDay) Color(0xFFffd07b) else Color(0xFF22223b)
                 ) {
-                    Column (
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .fillMaxHeight(),
+                            .fillMaxHeight()
+                            .navigationBarsPadding(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Top
                     ) {
-                        selectedDate?.let { day ->
-                            Row (
-                                modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                        Row(
+                            modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val selectedDayOrNight = if (isDay) "Day" else "Night"
+                            Funca(
+                                color = butcolor,
+                                text = formatteddate,
+                                icon = Icons.Default.CalendarMonth,
+                                modifier = Modifier
+                                    .fillMaxWidth(fraction = 0.5f)
+                                    .height(50.dp),
+                                tcolor = tcolor
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(butcolor)
                             ) {
-                                val selectedDayOrNight = if (isDay) "Day" else "Night"
-                                Funca("Date: $day/$selectedMonth/$selectedYear", Icons.Default.CalendarMonth)
-                                Icon(
-                                    if (selectedDayOrNight == "Day") Icons.Default.Brightness7 else Icons.Default.Brightness3,
-                                    contentDescription = null,
-                                    tint = Color.Yellow
-                                )
+                                IconButton(
+                                    onClick = { dateDialogState.show() }
+                                ) {
+                                    Icon(
+                                        Icons.Default.CalendarMonth,
+                                        contentDescription = null,
+                                        tint = tcolor
+                                    )
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(butcolor)
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        isDay = !isDay
+                                    }
+                                ) {
+                                    Icon(
+                                        if (selectedDayOrNight == "Day") Icons.Default.Brightness7 else Icons.Default.Brightness3,
+                                        contentDescription = null,
+                                        tint = tcolor
+                                    )
+                                }
                             }
                         }
                         AddHeight(20.dp)
-                        Funca("Guest count ${sliderpos.roundToInt()}", Icons.Default.Person)
+                        Funca(color = butcolor, text = "Guest count ${sliderpos.roundToInt()}", icon = Icons.Default.Person, tcolor = tcolor)
                         AddHeight(20.dp)
+                        Funca(color = butcolor, text = "Bill: ${price + ( if (sliderpos.roundToInt() > 800) 10000 * (sliderpos.roundToInt() - 800) / 50 else 0)}", icon = Icons.Default.Money, tcolor = tcolor)
+                        AddHeight(10.dp)
                         Slider(
                             value = sliderpos,
                             onValueChange = { newValue ->
-                                sliderpos = ((newValue - minValue) / stepSize).roundToInt() * stepSize + minValue
+                                sliderpos =
+                                    ((newValue - minValue) / stepSize).roundToInt() * stepSize + minValue
                             },
                             valueRange = minValue..maxValue,
-                            modifier = Modifier.fillMaxWidth(fraction = 0.85f)
+                            modifier = Modifier
+                                .fillMaxWidth(fraction = 0.85f)
                                 .graphicsLayer {
                                     shape = CircleShape
                                     clip = true
                                 },
                             colors = SliderDefaults.colors(
                                 thumbColor = Color.Blue,
-                                activeTrackColor = Color.Green,
-                                inactiveTrackColor = Color.LightGray
+                                activeTrackColor = butcolor,
+                                inactiveTrackColor = if (!isDay) Color.LightGray else Color.Black
                             ),
                             thumb = {
                                 Box(
                                     modifier = Modifier
                                         .size(15.dp)
                                         .clip(CircleShape)
-                                        .background(Color(0xFF004b23))
+                                        .background(butcolor)
                                 )
                             }
                         )
-
+                        AddHeight(10.dp)
                         Row(
                             modifier = Modifier.fillMaxWidth(fraction = 0.85f),
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Funca(
+                                color = butcolor,
                                 text = if (isDay) "1-30pm" else "8-30pm",
-                                Icons.Default.AccessTimeFilled,
+                                icon = Icons.Default.AccessTimeFilled,
                                 modifier = Modifier
                                     .weight(0.5f)
-                                    .height(50.dp)
+                                    .height(50.dp),
+                                tcolor = tcolor
                             )
                             Funca(
-                                if (isDay) "5pm" else "12pm",
-                                Icons.Default.AccessTimeFilled,
+                                color = butcolor,
+                                text = if (isDay) "5pm" else "12pm",
+                                icon = Icons.Default.AccessTimeFilled,
                                 modifier = Modifier
                                     .weight(0.5f)
-                                    .height(50.dp)
+                                    .height(50.dp),
+                                tcolor = tcolor
                             )
                         }
 
@@ -564,15 +475,44 @@ fun Venues() {
                         Button(
                             onClick = { },
                             modifier = Modifier
-                                .fillMaxWidth(fraction = 0.85f).height(50.dp),
+                                .fillMaxWidth(fraction = 0.85f)
+                                .height(50.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = secondarycolor,
-                                contentColor = backgroundcolor
+                                containerColor = butcolor,
+                                contentColor = tcolor
                             ),
                             shape = RoundedCornerShape(5.dp)
                         ) {
                             Text("Confirm Booking")
                         }
+                    }
+                }
+                MaterialDialog (
+                    dialogState = dateDialogState,
+                    properties = DialogProperties(
+
+                    ),
+                    backgroundColor = backgroundcolor,
+                    buttons = {
+                        positiveButton(
+                            "ok",
+                            textStyle = TextStyle(color = secondarycolor)
+                        )
+                    }
+                ) {
+                    datepicker(
+                        initialDate = LocalDate.now(),
+                        title = "Pick a date",
+                        colors = DatePickerDefaults.colors(
+                            headerBackgroundColor = secondarycolor,
+                            headerTextColor = backgroundcolor,
+                            calendarHeaderTextColor = secondarycolor,
+                            dateActiveBackgroundColor = secondarycolor,
+                            dateActiveTextColor = backgroundcolor,
+                            dateInactiveTextColor = secondarycolor
+                        )
+                    ) {
+                        pickeddate = it
                     }
                 }
             }

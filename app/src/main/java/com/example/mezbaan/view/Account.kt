@@ -98,6 +98,8 @@ fun Account(
                                     NavigationBarItems.Account -> {
 
                                     }
+
+                                    NavigationBarItems.Msg -> {}
                                 }
                             },
 
