@@ -20,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.MezbaanTheme
-import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
 import kotlinx.coroutines.delay
 

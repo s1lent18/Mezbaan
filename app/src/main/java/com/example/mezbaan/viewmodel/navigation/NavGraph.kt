@@ -6,10 +6,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.example.mezbaan.view.Account
 import com.example.mezbaan.view.Caterers
+import com.example.mezbaan.view.Decorators
 import com.example.mezbaan.view.Login
 import com.example.mezbaan.view.Signup
 import com.example.mezbaan.view.Home
 import com.example.mezbaan.view.Landing
+import com.example.mezbaan.view.Messages
 import com.example.mezbaan.view.Vendors
 import com.example.mezbaan.view.Venues
 
@@ -56,7 +58,17 @@ fun NavGraph(
         }
 
         this.composable(
+            route = Screens.Decorators.route
+        ) {
+            Decorators()
+        }
+
+        this.composable(
             route = Screens.Vendors.route
         ) { Vendors() }
+
+        this.composable(
+            route = Screens.Msg.route
+        ) { Messages() }
     }
 }

@@ -424,23 +424,24 @@ fun Venues() {
                                     ((newValue - minValue) / stepSize).roundToInt() * stepSize + minValue
                             },
                             valueRange = minValue..maxValue,
+                            steps = ((maxValue - minValue) / stepSize).toInt() - 1,
                             modifier = Modifier
-                                .fillMaxWidth(fraction = 0.85f)
+                                .fillMaxWidth(0.85f)
                                 .graphicsLayer {
-                                    shape = CircleShape
+                                    shape = RoundedCornerShape(8.dp)
                                     clip = true
                                 },
                             colors = SliderDefaults.colors(
-                                thumbColor = Color.Blue,
-                                activeTrackColor = butcolor,
-                                inactiveTrackColor = if (!isDay) Color.LightGray else Color.Black
+                                thumbColor = Color.White,
+                                activeTrackColor = secondarycolor,
+                                inactiveTrackColor = Color(0xFF023047)
                             ),
                             thumb = {
                                 Box(
                                     modifier = Modifier
-                                        .size(15.dp)
+                                        .size(16.dp)
                                         .clip(CircleShape)
-                                        .background(butcolor)
+                                        .background(Color.White)
                                 )
                             }
                         )

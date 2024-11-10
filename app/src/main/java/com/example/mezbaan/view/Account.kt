@@ -57,7 +57,7 @@ fun Account(
 ) {
     val user by authviewmodel.user.observeAsState()
     val navigationBarItems = remember { NavigationBarItems.entries }
-    var selectedIndex by remember { mutableIntStateOf(1) }
+    var selectedIndex by remember { mutableIntStateOf(2) }
     val insets = WindowInsets.navigationBars
     val bottomInsetDp = with(LocalDensity.current) { insets.getBottom(LocalDensity.current).toDp() }
 

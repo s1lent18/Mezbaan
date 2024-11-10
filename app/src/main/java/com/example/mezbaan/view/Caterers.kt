@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -527,15 +528,27 @@ fun Caterers() {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Funca(text = "${(sliderpos.roundToInt()) * cartItems.sumOf { it.rate }} ", icon = Icons.Default.CalendarMonth)
-                                IconButton(
-                                    onClick = { information = false }
-                                ) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = null,
-                                        tint = Color.Yellow
-                                    )
+                                Funca(
+                                    text = "${(sliderpos.roundToInt()) * cartItems.sumOf { it.rate }} ",
+                                    icon = Icons.Default.Money,
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.8f)
+                                        .height(50.dp)
+                                )
+                                Box (
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(secondarycolor)
+                                ){
+                                    IconButton(
+                                        onClick = { information = false }
+                                    ) {
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = null,
+                                            tint = backgroundcolor
+                                        )
+                                    }
                                 }
                             }
                             AddHeight(20.dp)
@@ -544,15 +557,27 @@ fun Caterers() {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Funca(text = formatteddate, icon = Icons.Default.CalendarMonth)
-                                IconButton(
-                                    onClick = { dateDialogState.show() }
+                                Funca(
+                                    text = formatteddate,
+                                    icon = Icons.Default.CalendarMonth,
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.8f)
+                                        .height(50.dp)
+                                )
+                                Box (
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(secondarycolor)
                                 ) {
-                                    Icon(
-                                        Icons.Default.CalendarMonth,
-                                        contentDescription = null,
-                                        tint = Color.Yellow
-                                    )
+                                    IconButton(
+                                        onClick = { dateDialogState.show() }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.CalendarMonth,
+                                            contentDescription = null,
+                                            tint = backgroundcolor
+                                        )
+                                    }
                                 }
                             }
                             AddHeight(20.dp)
@@ -561,15 +586,27 @@ fun Caterers() {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Funca(text = formattedtime, icon = Icons.Default.AccessTime)
-                                IconButton(
-                                    onClick = { timeDialogState.show() }
+                                Funca(
+                                    text = formattedtime,
+                                    icon = Icons.Default.AccessTime,
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.8f)
+                                        .height(50.dp)
+                                )
+                                Box (
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(secondarycolor)
                                 ) {
-                                    Icon(
-                                        Icons.Default.AccessTime,
-                                        contentDescription = null,
-                                        tint = Color.Yellow
-                                    )
+                                    IconButton(
+                                        onClick = { timeDialogState.show() }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.AccessTime,
+                                            contentDescription = null,
+                                            tint = backgroundcolor
+                                        )
+                                    }
                                 }
                             }
                             AddHeight(20.dp)
@@ -582,23 +619,24 @@ fun Caterers() {
                                         ((newValue - minValue) / stepSize).roundToInt() * stepSize + minValue
                                 },
                                 valueRange = minValue..maxValue,
+                                steps = ((maxValue - minValue) / stepSize).toInt() - 1,
                                 modifier = Modifier
-                                    .fillMaxWidth(fraction = 0.85f)
+                                    .fillMaxWidth(0.85f)
                                     .graphicsLayer {
-                                        shape = CircleShape
+                                        shape = RoundedCornerShape(8.dp)
                                         clip = true
                                     },
                                 colors = SliderDefaults.colors(
-                                    thumbColor = Color.Blue,
-                                    activeTrackColor = Color.Green,
-                                    inactiveTrackColor = Color.LightGray
+                                    thumbColor = Color.White,
+                                    activeTrackColor = secondarycolor,
+                                    inactiveTrackColor = Color(0xFF023047)
                                 ),
                                 thumb = {
                                     Box(
                                         modifier = Modifier
-                                            .size(15.dp)
+                                            .size(16.dp)
                                             .clip(CircleShape)
-                                            .background(Color(0xFF004b23))
+                                            .background(Color.White)
                                     )
                                 }
                             )

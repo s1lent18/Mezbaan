@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,10 +27,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.MonetizationOn
+import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ThumbUpAlt
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -39,8 +44,13 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -54,12 +64,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
@@ -79,6 +91,7 @@ import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.roundToInt
 
 @Composable
 fun MediaRep(
@@ -108,6 +121,7 @@ fun MediaRep(
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
@@ -124,10 +138,17 @@ fun Vendors() {
         var pickeddate by remember { mutableStateOf(LocalDate.now()) }
         var pickedtime by remember { mutableStateOf(LocalTime.NOON) }
         val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
-        val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm").format(pickedtime) } }
+        val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm a").format(pickedtime) } }
         var information by rememberSaveable { mutableStateOf(false) }
         val bottomSheetState = rememberModalBottomSheetState()
         var isSheetopen by rememberSaveable { mutableStateOf(false) }
+        var launchdialog by remember { mutableStateOf(false) }
+        var launchhourpicker by remember { mutableStateOf(false) }
+        var selectedoption by remember { mutableStateOf("") }
+        val stepSize = 1f
+        val minValue = 1f
+        val maxValue = 12f
+        var sliderpos by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
 
         Column(
             modifier = Modifier
@@ -468,15 +489,27 @@ fun Vendors() {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Funca(text = formatteddate, icon = Icons.Default.CalendarMonth)
-                                IconButton(
-                                    onClick = { dateDialogState.show() }
+                                Funca(
+                                    text = formatteddate,
+                                    icon = Icons.Default.CalendarMonth,
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.8f)
+                                        .height(50.dp)
+                                )
+                                Box (
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(secondarycolor)
                                 ) {
-                                    Icon(
-                                        Icons.Default.CalendarMonth,
-                                        contentDescription = null,
-                                        tint = Color.Yellow
-                                    )
+                                    IconButton(
+                                        onClick = { dateDialogState.show() }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.CalendarMonth,
+                                            contentDescription = null,
+                                            tint = backgroundcolor
+                                        )
+                                    }
                                 }
                             }
                             AddHeight(20.dp)
@@ -485,18 +518,78 @@ fun Vendors() {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Funca(text = formattedtime, icon = Icons.Default.AccessTime)
-                                IconButton(
-                                    onClick = { timeDialogState.show() }
+                                Funca(
+                                    text = "$formattedtime - ${sliderpos.toInt()} hours",
+                                    icon = Icons.Default.AccessTime,
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.65f)
+                                        .height(50.dp)
+                                )
+                                Box (
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(secondarycolor)
                                 ) {
-                                    Icon(
-                                        Icons.Default.AccessTime,
-                                        contentDescription = null,
-                                        tint = Color.Yellow
-                                    )
+                                    IconButton(
+                                        onClick = { timeDialogState.show() }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.AccessTime,
+                                            contentDescription = null,
+                                            tint = backgroundcolor
+                                        )
+                                    }
+                                }
+                                Box (
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(secondarycolor)
+                                ) {
+                                    IconButton(
+                                        onClick = { launchhourpicker = true }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.AlarmAdd,
+                                            contentDescription = null,
+                                            tint = backgroundcolor
+                                        )
+                                    }
                                 }
                             }
                             AddHeight(20.dp)
+                            Row (
+                                modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Funca(
+                                    text = "Event Type: $selectedoption",
+                                    icon = Icons.Default.Event,
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.8f)
+                                        .height(50.dp)
+                                )
+                                Box (
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(secondarycolor)
+                                ) {
+                                    IconButton(
+                                        onClick = { launchdialog = true }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Event,
+                                            contentDescription = null,
+                                            tint = backgroundcolor
+                                        )
+                                    }
+                                }
+                            }
+                            AddHeight(20.dp)
+                            Funca(
+                                text = "Bill: ${25000 * sliderpos.toInt()}",
+                                icon = Icons.Default.Money,
+                            )
                             AddHeight(30.dp)
                             Button(
                                 onClick = { information = true },
@@ -572,6 +665,115 @@ fun Vendors() {
                         ) {
                             pickedtime = it
                         }
+                    }
+
+                    if (launchdialog) {
+                        AlertDialog(
+                            onDismissRequest = { launchdialog = false },
+                            title = { Text("Choose an Option", color = secondarycolor) },
+                            text = {
+                                Column {
+                                    val options = listOf("Wedding", "Birthday", "Corporate Event", "Graduation")
+                                    options.forEach { option ->
+                                        Text(
+                                            text = option,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(8.dp)
+                                                .clickable {
+                                                    selectedoption = option
+                                                    launchdialog = false
+                                                },
+                                            color = secondarycolor
+                                        )
+                                    }
+
+                                    TextField(
+                                        label = { Text("Other", fontSize = 14.sp) },
+                                        value = selectedoption,
+                                        onValueChange = { newValue ->
+                                            selectedoption = newValue
+                                        },
+                                        colors = TextFieldDefaults.colors(
+                                            focusedContainerColor = Color.Transparent,
+                                            unfocusedContainerColor = Color.Transparent,
+                                            focusedIndicatorColor = Color.Transparent,
+                                            unfocusedIndicatorColor = Color.Transparent,
+                                            disabledIndicatorColor = Color.Transparent,
+                                            disabledLabelColor = secondarycolor,
+                                            unfocusedLabelColor = secondarycolor,
+                                            focusedLabelColor = secondarycolor,
+                                            focusedTextColor = secondarycolor,
+                                            unfocusedTextColor = secondarycolor,
+                                            disabledTextColor = secondarycolor
+                                        )
+                                    )
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(onClick = { launchdialog = false }) {
+                                    Text("Close", color = secondarycolor)
+                                }
+                            },
+                            containerColor = backgroundcolor
+                        )
+                    }
+
+                    if (launchhourpicker) {
+                        AlertDialog(
+                            onDismissRequest = { launchdialog = false },
+                            title = { Text("Choose Number of Hours", color = secondarycolor, fontSize = dimens.fontsize) },
+                            text = {
+                                Column (
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(50.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = "Value: ${sliderpos.toInt()}",
+                                        color = secondarycolor,
+                                        fontSize = dimens.buttontext
+                                    )
+                                    AddHeight(dimens.medium2)
+                                    Slider(
+                                        value = sliderpos,
+                                        onValueChange = { newValue ->
+                                            sliderpos =
+                                                ((newValue - minValue) / stepSize).roundToInt() * stepSize + minValue
+                                        },
+                                        valueRange = minValue..maxValue,
+                                        steps = ((maxValue - minValue) / stepSize).toInt() - 1,
+                                        modifier = Modifier
+                                            .fillMaxWidth(0.85f)
+                                            .graphicsLayer {
+                                                shape = RoundedCornerShape(8.dp)
+                                                clip = true
+                                            },
+                                        colors = SliderDefaults.colors(
+                                            thumbColor = Color.White,
+                                            activeTrackColor = secondarycolor,
+                                            inactiveTrackColor = Color(0xFF023047)
+                                        ),
+                                        thumb = {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(16.dp)
+                                                    .clip(CircleShape)
+                                                    .background(Color.White)
+                                            )
+                                        }
+                                    )
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(onClick = { launchhourpicker = false }) {
+                                    Text("Close", color = secondarycolor)
+                                }
+                            },
+                            containerColor = backgroundcolor
+                        )
                     }
                 }
             }
