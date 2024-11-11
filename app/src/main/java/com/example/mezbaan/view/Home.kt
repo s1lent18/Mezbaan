@@ -216,7 +216,7 @@ fun Home(
                                     }
 
                                     NavigationBarItems.Msg -> {
-
+                                        navController.navigate(route = Screens.Msg.route)
                                     }
 
                                     NavigationBarItems.Logout -> {

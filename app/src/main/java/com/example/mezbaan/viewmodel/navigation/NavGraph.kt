@@ -69,6 +69,6 @@ fun NavGraph(
 
         this.composable(
             route = Screens.Msg.route
-        ) { Messages() }
+        ) { Messages(navController = navController) }
     }
 }
