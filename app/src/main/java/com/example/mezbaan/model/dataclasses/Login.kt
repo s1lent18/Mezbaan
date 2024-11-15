@@ -4,7 +4,3 @@ data class LoginReq(
     val username: String,
     val password: String
 )
-
-data class LoginHandle(
-    val result: Boolean
-)

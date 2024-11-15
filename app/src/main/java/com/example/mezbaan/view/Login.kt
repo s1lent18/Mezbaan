@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mezbaan.R
@@ -353,7 +352,7 @@ fun Login(
                             .height(dimens.buttonHeight),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator()
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp))
                         }
                     }
 
@@ -448,7 +447,7 @@ fun Login(
                                 navController.navigate(route = Screens.Home.route)
                             }
                         }
-                        null -> { /* No request made yet */ }
+                        null -> { }
                     }
                 }
             }

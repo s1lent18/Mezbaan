@@ -1,7 +1,7 @@
 package com.example.mezbaan.model.api
 
-import com.example.mezbaan.model.dataclasses.LoginHandle
 import com.example.mezbaan.model.dataclasses.LoginReq
+import com.example.mezbaan.model.models.LoginHandle
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST

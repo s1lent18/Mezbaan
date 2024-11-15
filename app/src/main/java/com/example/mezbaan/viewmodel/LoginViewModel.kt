@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mezbaan.model.api.RetrofitInstance
-import com.example.mezbaan.model.dataclasses.LoginHandle
+import com.example.mezbaan.model.models.LoginHandle
 import com.example.mezbaan.model.dataclasses.LoginReq
 import com.example.mezbaan.model.response.NetworkResponse
 import kotlinx.coroutines.launch

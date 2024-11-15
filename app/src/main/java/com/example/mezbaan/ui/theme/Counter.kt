@@ -263,7 +263,6 @@ private fun DraggableThumbButton(
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            // change the x and y position of the composable
             .offset {
                 IntOffset(
                     thumbOffsetX.value.toInt(),
@@ -287,7 +286,6 @@ private fun DraggableThumbButton(
                     awaitPointerEventScope {
                         awaitFirstDown()
 
-                        // reset drag direction
                         dragDirection.value = DragDirection.NONE
 
                         var counterJob: Job? = null
@@ -295,13 +293,11 @@ private fun DraggableThumbButton(
                         do {
                             val event = awaitPointerEvent()
                             event.changes.forEach { pointerInputChange ->
-                                // update logic inside DraggableThumbButton.Modifier.pointerInput
                                 scope.launch {
                                     if ((dragDirection.value == DragDirection.NONE &&
                                                 pointerInputChange.positionChange().x.absoluteValue >= startDragThreshold) ||
                                         dragDirection.value == DragDirection.HORIZONTAL
                                     ) {
-                                        // in case of the initial drag
                                         if (dragDirection.value == DragDirection.NONE) {
                                             counterJob = scope.launch {
                                                 delay(COUNTER_DELAY_INITIAL_MS)
