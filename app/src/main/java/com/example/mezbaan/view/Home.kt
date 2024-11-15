@@ -1,6 +1,7 @@
 package com.example.mezbaan.view
 
 import android.annotation.SuppressLint
+import android.graphics.drawable.BitmapDrawable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
@@ -33,6 +34,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
@@ -53,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -66,6 +69,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.navigation.NavController
 import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.palette.graphics.Palette
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import com.example.mezbaan.R
@@ -131,7 +135,27 @@ fun Itemstobook(
 }
 
 @Composable
-fun Cards(text: String, onclick: () -> Unit, model: String = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYz8zEAFyjZKTNeQW-MRagzdrD-bTFpArsiA&s") {
+fun Cards(
+    text: String,
+    onclick: () -> Unit,
+    model: String = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYz8zEAFyjZKTNeQW-MRagzdrD-bTFpArsiA&s"
+) {
+    var textColor by remember { mutableStateOf(Color.White) }
+    val painter = rememberAsyncImagePainter(model = model)
+    val imageState = painter.state
+
+    if (imageState is AsyncImagePainter.State.Success) {
+        val bitmap = (imageState.result.drawable as? BitmapDrawable)?.bitmap
+        bitmap?.let {
+            Palette.from(it).generate { palette ->
+                palette?.let {
+                    val dominantColor = palette.dominantSwatch?.rgb ?: Color.White.toArgb()
+                    textColor = if (isColorDark(dominantColor)) Color.White else Color.Black
+                }
+            }
+        }
+    }
+
     FloatingActionButton(
         onClick = onclick,
         modifier = Modifier
@@ -142,8 +166,6 @@ fun Cards(text: String, onclick: () -> Unit, model: String = "https://encrypted-
         Box (
             contentAlignment = Alignment.Center
         ) {
-            val painter = rememberAsyncImagePainter(model = model)
-            val imageState = painter.state
             Image(
                 painter = painter,
                 contentDescription = "Profile Picture",
@@ -170,11 +192,20 @@ fun Cards(text: String, onclick: () -> Unit, model: String = "https://encrypted-
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(text, color = Color.White, fontSize = dimens.labeltext, fontFamily = Bebas)
+                    Text(text, color = textColor, fontSize = dimens.labeltext, fontFamily = Bebas)
                 }
             }
         }
     }
+}
+
+fun isColorDark(color: Int): Boolean {
+    val darkness = 1 - (
+            0.299 * ((color shr 16) and 0xFF) +
+                    0.587 * ((color shr 8) and 0xFF) +
+                    0.114 * (color and 0xFF)
+            ) / 255
+    return darkness >= 0.5
 }
 
 
@@ -349,7 +380,17 @@ fun Home(
                                         focusedIndicatorColor = Color.Transparent,
                                         unfocusedIndicatorColor = Color.Transparent,
                                         disabledIndicatorColor = Color.Transparent,
-                                    )
+                                    ),
+                                    trailingIcon = {
+                                        IconButton(
+                                            onClick = {}
+                                        ) {
+                                            Icon(
+                                                Icons.Default.FilterAlt,
+                                                contentDescription = null,
+                                            )
+                                        }
+                                    }
                                 )
 
                                 if (filteredSuggestions.isNotEmpty()) {

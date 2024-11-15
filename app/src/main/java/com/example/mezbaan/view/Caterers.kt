@@ -266,7 +266,7 @@ fun Caterers() {
         val maxValue = 3000f
         var sliderpos by remember { mutableFloatStateOf(50.0f) }
         var information by rememberSaveable { mutableStateOf(false) }
-        val bottomSheetState = rememberModalBottomSheetState()
+        val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         var isSheetopen by rememberSaveable { mutableStateOf(false) }
         var cartItems by remember { mutableStateOf(listOf<CartItems>()) }
         var searchQuery by remember { mutableStateOf("") }
@@ -476,8 +476,7 @@ fun Caterers() {
                     if (!information) {
                         Column (
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight(),
+                                .fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Top
                         ) {
@@ -514,12 +513,12 @@ fun Caterers() {
                             ) {
                                 Text("Proceed for event information")
                             }
+                            AddHeight(20.dp)
                         }
                     } else {
                         Column (
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight(),
+                                .fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Top
                         ) {
@@ -656,6 +655,7 @@ fun Caterers() {
                             ) {
                                 Text("Confirm Booking")
                             }
+                            AddHeight(20.dp)
                         }
                     }
                 }

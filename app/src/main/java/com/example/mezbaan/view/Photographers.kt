@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -54,10 +55,12 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -88,6 +91,8 @@ import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.datetime.time.TimePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -127,10 +132,16 @@ fun MediaRep(
 @Composable
 fun Vendors() {
     Surface {
+        val stepSize = 1f
+        val minValue = 1f
+        val maxValue = 12f
+        val itemCount = 5
         val context = LocalContext.current
         val today = LocalDate.now()
-        val dateList = List(30) { today.plusDays(it.toLong()) }
+        val listState = rememberLazyListState()
+        val coroutineScope = rememberCoroutineScope()
         val selected = remember { mutableStateOf(false) }
+        val dateList = List(30) { today.plusDays(it.toLong()) }
         val butcolor = if (selected.value) secondarycolor else Color.White
         val buttext = if (selected.value) "Liked" else "Like"
         val dateDialogState = rememberMaterialDialogState()
@@ -140,15 +151,35 @@ fun Vendors() {
         val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
         val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm a").format(pickedtime) } }
         var information by rememberSaveable { mutableStateOf(false) }
-        val bottomSheetState = rememberModalBottomSheetState()
+        val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         var isSheetopen by rememberSaveable { mutableStateOf(false) }
         var launchdialog by remember { mutableStateOf(false) }
         var launchhourpicker by remember { mutableStateOf(false) }
         var selectedoption by remember { mutableStateOf("") }
-        val stepSize = 1f
-        val minValue = 1f
-        val maxValue = 12f
         var sliderpos by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+        var currentIndex by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+        var isScrollingForward by remember { mutableStateOf(true) }
+
+        LaunchedEffect(Unit) {
+            while (true) {
+                delay(2000)
+                coroutineScope.launch {
+                    currentIndex = if (isScrollingForward) {
+                        currentIndex + 1
+                    } else {
+                        currentIndex - 1
+                    }
+
+                    listState.animateScrollToItem(currentIndex)
+
+                    if (currentIndex == itemCount - 2) {
+                        isScrollingForward = false
+                    } else if (currentIndex == 0) {
+                        isScrollingForward = true
+                    }
+                }
+            }
+        }
 
         Column(
             modifier = Modifier
@@ -435,14 +466,17 @@ fun Vendors() {
                         Text("Samples", fontFamily = Bebas, fontSize = dimens.labeltext)
 
                         LazyRow(
+                            state = listState,
                             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
                         ) {
-                            items(5) {
+                            items(5) { index ->
                                 MediaRep(
                                     image = "https://cdn.expertphotography.com/wp-content/uploads/2021/08/Become-Professional-Photographer-Colin-Lloyd.jpg",
                                     onclick = {}
                                 )
-                                AddWidth(dimens.scrollspacer)
+                                if (index < itemCount - 1) {
+                                    AddWidth(dimens.scrollspacer)
+                                }
                             }
                         }
                         AddHeight(30.dp)
@@ -479,7 +513,6 @@ fun Vendors() {
                         Column (
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .fillMaxHeight()
                                 .navigationBarsPadding(),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Top
@@ -604,6 +637,7 @@ fun Vendors() {
                             ) {
                                 Text("Confirm Booking")
                             }
+                            AddHeight(20.dp)
                         }
                     }
                     MaterialDialog (

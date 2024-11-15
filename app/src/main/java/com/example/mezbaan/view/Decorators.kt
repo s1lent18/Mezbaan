@@ -92,7 +92,7 @@ fun Decorators() {
         val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
         val dateDialogState = rememberMaterialDialogState()
         var isSheetopen by remember { mutableStateOf(false) }
-        val bottomSheetState = rememberModalBottomSheetState()
+        val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         var sliderpos by remember { mutableFloatStateOf(0f) }
         val valueCounter = remember { mutableStateListOf(0, 0, 0, 0, 0) }
         val stepSize = 1f
@@ -253,7 +253,6 @@ fun Decorators() {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .fillMaxHeight()
                             .navigationBarsPadding(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Top
@@ -280,6 +279,7 @@ fun Decorators() {
                                     valueCounter[0] = 0
                                 }
                             )
+                            AddWidth(20.dp)
                         }
                         AddHeight(20.dp)
                         Row (
@@ -304,6 +304,7 @@ fun Decorators() {
                                     valueCounter[1] = 0
                                 }
                             )
+                            AddWidth(20.dp)
                         }
                         AddHeight(20.dp)
                         Row (
@@ -328,6 +329,7 @@ fun Decorators() {
                                     valueCounter[2] = 0
                                 }
                             )
+                            AddWidth(20.dp)
                         }
                         AddHeight(20.dp)
                         Row (
@@ -352,6 +354,7 @@ fun Decorators() {
                                     valueCounter[3] = 0
                                 }
                             )
+                            AddWidth(20.dp)
                         }
                         AddHeight(20.dp)
                         Row (
@@ -376,6 +379,7 @@ fun Decorators() {
                                     valueCounter[4] = 0
                                 }
                             )
+                            AddWidth(20.dp)
                         }
                         AddHeight(20.dp)
                         Funca(
@@ -475,6 +479,7 @@ fun Decorators() {
                         ) {
                             Text("Confirm Booking")
                         }
+                        AddHeight(20.dp)
                     }
                 }
                 MaterialDialog (

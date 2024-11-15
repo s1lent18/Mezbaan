@@ -52,13 +52,12 @@ import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.sign
 import androidx.compose.material3.Text
-import androidx.compose.ui.tooling.preview.Preview
 
 private const val ICON_BUTTON_ALPHA_INITIAL = 0.3f
 private const val CONTAINER_BACKGROUND_ALPHA_INITIAL = 0.6f
 private const val CONTAINER_BACKGROUND_ALPHA_MAX = 0.7f
 private const val CONTAINER_OFFSET_FACTOR = 0.1f
-private const val DRAG_LIMIT_HORIZONTAL_DP = 48
+private const val DRAG_LIMIT_HORIZONTAL_DP = 35
 private const val DRAG_LIMIT_VERTICAL_DP = 64
 private const val START_DRAG_THRESHOLD_DP = 2
 private const val DRAG_LIMIT_HORIZONTAL_THRESHOLD_FACTOR = 0.9f
@@ -80,8 +79,8 @@ fun CounterButton(
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .width(130.dp)
-            .height(50.dp)
+            .width(100.dp)
+            .height(40.dp)
     ) {
         val thumbOffsetX = remember { Animatable(0f) }
         val thumbOffsetY = remember { Animatable(0f) }
@@ -229,7 +228,7 @@ private fun IconControlButton(
         interactionSource = interactionSource,
         enabled = enabled,
         modifier = modifier
-            .size(32.dp)
+            .size(24.dp)
     ) {
         Icon(
             imageVector = icon,
@@ -272,7 +271,7 @@ private fun DraggableThumbButton(
                 )
             }
             .shadow(8.dp, shape = CircleShape)
-            .size(48.dp)
+            .size(40.dp)
             .clip(CircleShape)
             .clickable {
                 // only allow clicks while not dragging

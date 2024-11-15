@@ -55,6 +55,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.palette.ktx)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)

@@ -1,8 +1,12 @@
 package com.example.mezbaan.view
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +30,7 @@ import androidx.compose.material.icons.filled.AccessTimeFilled
 import androidx.compose.material.icons.filled.Brightness3
 import androidx.compose.material.icons.filled.Brightness7
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
@@ -44,11 +49,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -59,6 +66,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -70,13 +78,18 @@ import androidx.constraintlayout.compose.Dimension
 import coil.compose.rememberAsyncImagePainter
 import com.example.mezbaan.R
 import com.example.mezbaan.ui.theme.backgroundcolor
+import com.example.mezbaan.ui.theme.daycolor
 import com.example.mezbaan.ui.theme.dimens
+import com.example.mezbaan.ui.theme.navyblue
 import com.example.mezbaan.ui.theme.secondarycolor
 import com.google.accompanist.flowlayout.FlowRow
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.round
@@ -84,6 +97,7 @@ import kotlin.math.roundToInt
 
 @Composable
 fun BusinessCard(managername: String, contact: String, pic: Painter) {
+    val context = LocalContext.current
     Row (
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -99,7 +113,13 @@ fun BusinessCard(managername: String, contact: String, pic: Painter) {
             Text(
                 contact,
                 fontSize = dimens.buttontext,
-                color = secondarycolor
+                color = secondarycolor,
+                modifier = Modifier.clickable {
+                    val intent = Intent(Intent.ACTION_DIAL).apply {
+                        data = Uri.parse("tel:$contact")
+                    }
+                    context.startActivity(intent)
+                }
             )
         }
         Box (
@@ -170,20 +190,39 @@ fun Venues() {
         "https://drive.google.com/uc?export=view&id=179mOB6_5ewGP6ZiJjy7DGK9pJRg4WzA-",
         "https://drive.google.com/uc?export=view&id=1TchRSYUcoPdNp_-MGBaFirmmKNTXhTkt"
     )
-    var pickeddate by remember { mutableStateOf(LocalDate.now()) }
-    val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
-    val dateDialogState = rememberMaterialDialogState()
-    val pagerState = rememberPagerState(pageCount = { pics.size })
-    val bottomSheetState = rememberModalBottomSheetState()
-    var sliderpos by remember { mutableFloatStateOf(50.0f) }
-    var isSheetopen by rememberSaveable { mutableStateOf(false) }
-    var isDay by rememberSaveable { mutableStateOf(false) }
-    val price = if (!isDay) 400000 else (round((400000 / 1.5f) / 10000) * 10000).toInt()
-    val butcolor = if (isDay) backgroundcolor else secondarycolor
-    val tcolor = if (!isDay) backgroundcolor else secondarycolor
     val stepSize = 25f
     val minValue = 50f
     val maxValue = 1200f
+    val latitude = 24.8824115
+    val longitude = 67.0585993
+    val pagecount = pics.size
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val dateDialogState = rememberMaterialDialogState()
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var pickeddate by remember { mutableStateOf(LocalDate.now()) }
+    val pagerState = rememberPagerState(pageCount = { pagecount })
+    var sliderpos by remember { mutableFloatStateOf(50.0f) }
+    var isSheetopen by rememberSaveable { mutableStateOf(false) }
+    var isDay by rememberSaveable { mutableStateOf(false) }
+    val butcolor = if (isDay) backgroundcolor else secondarycolor
+    val tcolor = if (!isDay) backgroundcolor else secondarycolor
+    val price = if (!isDay) 400000 else (round((400000 / 1.5f) / 10000) * 10000).toInt()
+    val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            yield()
+            delay(3000)
+            val nextPage = (pagerState.currentPage + 1) % pagecount
+            coroutineScope.launch {
+                pagerState.animateScrollToPage(
+                    page = nextPage,
+                    animationSpec = tween(durationMillis = 1200)
+                )
+            }
+        }
+    }
 
     Surface {
         Column(
@@ -256,11 +295,33 @@ fun Venues() {
                 ) {
                     item {
                         Column {
-                            Text(
-                                "Name of the venue",
-                                fontSize = dimens.fontsize,
-                                color = secondarycolor
-                            )
+                            Row (
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Name of the venue",
+                                    fontSize = dimens.fontsize,
+                                    color = secondarycolor
+                                )
+
+                                Row (
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(30.dp))
+                                        .background(backgroundcolor)
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        .clickable {
+                                            val geoUri = Uri.parse("geo:$latitude,$longitude")
+                                            val intent = Intent(Intent.ACTION_VIEW, geoUri)
+                                            intent.setPackage("com.google.android.apps.maps")
+                                            context.startActivity(intent)
+                                        }
+                                ) {
+                                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = secondarycolor)
+                                    Text("Karachi", color = secondarycolor)
+                                }
+                            }
                             AddHeight(dimens.small1)
                             Row(
                                 modifier = Modifier
@@ -354,12 +415,11 @@ fun Venues() {
                     onDismissRequest = {
                         isSheetopen = false
                     },
-                    containerColor = if (isDay) Color(0xFFffd07b) else Color(0xFF22223b)
+                    containerColor = if (isDay) daycolor else navyblue
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .fillMaxHeight()
                             .navigationBarsPadding(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Top
@@ -433,8 +493,8 @@ fun Venues() {
                                 },
                             colors = SliderDefaults.colors(
                                 thumbColor = Color.White,
-                                activeTrackColor = secondarycolor,
-                                inactiveTrackColor = Color(0xFF023047)
+                                activeTrackColor = if (isDay) navyblue else secondarycolor,
+                                inactiveTrackColor = backgroundcolor
                             ),
                             thumb = {
                                 Box(
@@ -486,6 +546,7 @@ fun Venues() {
                         ) {
                             Text("Confirm Booking")
                         }
+                        AddHeight(20.dp)
                     }
                 }
                 MaterialDialog (
