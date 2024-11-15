@@ -4,6 +4,7 @@ package com.example.mezbaan.view
 
 import android.app.Activity
 import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
@@ -313,12 +314,18 @@ fun Login(
                         )
                     }
 
-                    if (!isLoading ) {
+                    if (!isLoading) {
                         Button(
                             onClick = {
                                 if (username.isNotEmpty() && password.isNotEmpty()) {
                                     clicked = true
                                     keyboardController?.hide()
+                                }
+                                else if (username.isEmpty()) {
+                                    Toast.makeText(context, "Enter username", Toast.LENGTH_SHORT).show()
+                                }
+                                else if (password.isEmpty()) {
+                                    Toast.makeText(context, "Enter password", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             modifier = Modifier
@@ -340,16 +347,17 @@ fun Login(
                                 fontSize = dimens.buttontext
                             )
                         }
-                    } else {
+                    }
+                    else {
                         Box(
                             modifier = Modifier
-                            .constrainAs(signInButton) {
-                                top.linkTo(recoverPassword.bottom, margin = 20.dp)
-                                start.linkTo(parent.start)
-                                end.linkTo(parent.end)
-                                width = Dimension.percent(0.8f)
-                            }
-                            .height(dimens.buttonHeight),
+                                .constrainAs(signInButton) {
+                                    top.linkTo(recoverPassword.bottom, margin = 20.dp)
+                                    start.linkTo(parent.start)
+                                    end.linkTo(parent.end)
+                                    width = Dimension.percent(0.8f)
+                                }
+                                .height(dimens.buttonHeight),
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp))
@@ -439,8 +447,14 @@ fun Login(
                 AddHeight(40.dp)
                 if(username.isNotEmpty() && password.isNotEmpty() && requestreceived) {
                     when (val request = loginresult.value) {
-                        is NetworkResponse.Failure -> isLoading = false
-                        NetworkResponse.Loading -> isLoading = true
+                        is NetworkResponse.Failure -> {
+                            isLoading = false
+                            Toast.makeText(context, "Wrong Username/Password", Toast.LENGTH_LONG).show()
+                        }
+                        NetworkResponse.Loading -> {
+                            isLoading = true
+
+                        }
                         is NetworkResponse.Success -> {
                             isLoading = false
                             if (request.data.result) {

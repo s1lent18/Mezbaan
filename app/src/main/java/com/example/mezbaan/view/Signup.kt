@@ -3,9 +3,11 @@
 package com.example.mezbaan.view
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,7 +34,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -53,11 +59,15 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mezbaan.R
+import com.example.mezbaan.model.dataclasses.LoginReq
+import com.example.mezbaan.model.dataclasses.SignUpReq
+import com.example.mezbaan.model.response.NetworkResponse
 import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
 import com.example.mezbaan.viewmodel.AuthViewModel
+import com.example.mezbaan.viewmodel.SignupViewModel
 import com.example.mezbaan.viewmodel.navigation.Screens
 import com.google.android.gms.auth.api.signin.GoogleSignIn.getClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -106,7 +116,8 @@ fun Input(
 @Composable
 fun Signup(
     navController: NavController,
-    authviewmodel : AuthViewModel = viewModel()
+    authviewmodel : AuthViewModel = viewModel(),
+    signupviewmodel: SignupViewModel = viewModel()
 ) {
     Surface {
         val (email, setemail) = remember { mutableStateOf("") }
@@ -117,7 +128,12 @@ fun Signup(
         val color = if(isSystemInDarkTheme()) alterblack else Color.White
         val token = stringResource(R.string.client_id)
         val context = LocalContext.current
+        val signupresult = signupviewmodel.signupresult.observeAsState()
+        var requestreceived by remember { mutableStateOf(false) }
+        var isLoading by remember { mutableStateOf(false) }
         val icon = if (passwordvisibility) painterResource(id = R.drawable.eye) else painterResource(id = R.drawable.lock)
+        var clicked by remember { mutableStateOf(false) }
+        val keyboardController = LocalSoftwareKeyboardController.current
 
         val launcher = rememberfirebaselauncher(
             onAuthComplete = { result ->
@@ -127,6 +143,20 @@ fun Signup(
                 authviewmodel.setUser(null)
             }
         )
+
+        LaunchedEffect (clicked) {
+            if(clicked) {
+                val signuprequest = SignUpReq(
+                    username = username,
+                    password = password,
+                    email = email,
+                    phone = phonenumber
+                )
+                signupviewmodel.signup(signuprequest)
+                clicked = false
+                requestreceived = true
+            }
+        }
 
         Column(
             modifier = Modifier
@@ -230,32 +260,64 @@ fun Signup(
                             end.linkTo(parent.end)
                         },
 
-                    )
+                )
 
-
-                Button(
-                    onClick = {
-                        navController.navigate(route = Screens.Home.route)
-                    },
-                    modifier = Modifier
-                        .constrainAs(registerbutton) {
-                            top.linkTo(passwordinput.bottom, margin = 30.dp)
-                            start.linkTo(parent.start)
-                            end.linkTo(parent.end)
-                            width = Dimension.percent(0.8f)
-                        }
-                        .height(dimens.buttonHeight),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = backgroundcolor,
-                        contentColor = secondarycolor
-                    )
-                ) {
-                    Text(
-                        "Register",
-                        fontSize = dimens.buttontext
-                    )
+                if (!isLoading) {
+                    Button(
+                        onClick = {
+                            if (username.isNotEmpty() && password.isNotEmpty() && phonenumber.isNotEmpty() && email.isNotEmpty()) {
+                                clicked = true
+                                keyboardController?.hide()
+                            }
+                            else if (username.isEmpty()) {
+                                Toast.makeText(context, "Enter username", Toast.LENGTH_SHORT).show()
+                            }
+                            else if (password.isEmpty()) {
+                                Toast.makeText(context, "Enter password", Toast.LENGTH_SHORT).show()
+                            }
+                            else if (email.isEmpty()) {
+                                Toast.makeText(context, "Enter Email", Toast.LENGTH_SHORT).show()
+                            }
+                            else if (phonenumber.isEmpty()) {
+                                Toast.makeText(context, "Enter phonenumber", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier
+                            .constrainAs(registerbutton) {
+                                top.linkTo(passwordinput.bottom, margin = 30.dp)
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                width = Dimension.percent(0.8f)
+                            }
+                            .height(dimens.buttonHeight),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = backgroundcolor,
+                            contentColor = secondarycolor
+                        )
+                    ) {
+                        Text(
+                            "Register",
+                            fontSize = dimens.buttontext
+                        )
+                    }
                 }
+                else {
+                    Box(
+                        modifier = Modifier
+                            .constrainAs(registerbutton) {
+                                top.linkTo(passwordinput.bottom, margin = 30.dp)
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                width = Dimension.percent(0.8f)
+                            }
+                            .height(dimens.buttonHeight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    }
+                }
+
                 Row(
                     modifier = Modifier.constrainAs(dividerrow) {
                         top.linkTo(registerbutton.bottom, margin = 30.dp)
@@ -337,6 +399,25 @@ fun Signup(
                             navController.navigate(route = Screens.Login.route)
                         }
                     )
+                }
+
+                if(username.isNotEmpty() && password.isNotEmpty() && email.isNotEmpty() && phonenumber.isNotEmpty() && requestreceived) {
+                    when (val request = signupresult.value) {
+                        is NetworkResponse.Failure -> {
+                            isLoading = false
+                            Toast.makeText(context, "Wrong Username/Password", Toast.LENGTH_LONG).show()
+                        }
+                        NetworkResponse.Loading -> {
+                            isLoading = true
+                        }
+                        is NetworkResponse.Success -> {
+                            isLoading = false
+                            if (request.data.result) {
+                                navController.navigate(route = Screens.Home.route)
+                            }
+                        }
+                        null -> { }
+                    }
                 }
             }
         }

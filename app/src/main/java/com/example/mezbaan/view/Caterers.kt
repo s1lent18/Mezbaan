@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -35,6 +37,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,8 +51,11 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,18 +77,24 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.mezbaan.R
 import com.example.mezbaan.model.dataclasses.CartItems
+import com.example.mezbaan.model.dataclasses.CateringBook
 import com.example.mezbaan.model.dataprovider.AppetizersOption
 import com.example.mezbaan.model.dataprovider.CaterersOption
 import com.example.mezbaan.model.dataprovider.DessertsOption
 import com.example.mezbaan.model.dataprovider.DrinksOptions
 import com.example.mezbaan.model.dataprovider.MainCourseOptions
+import com.example.mezbaan.model.response.NetworkResponse
 import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
+import com.example.mezbaan.viewmodel.CateringViewModel
+import com.example.mezbaan.viewmodel.UserViewModel
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
@@ -90,6 +102,7 @@ import com.vanpra.composematerialdialogs.datetime.time.TimePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
@@ -251,25 +264,40 @@ fun DialogFood(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Caterers() {
+fun Caterers(
+    navController: NavController,
+    userviewmodel: UserViewModel = viewModel(),
+    cateringviewmodel: CateringViewModel = viewModel()
+) {
     Surface {
-        val context = LocalContext.current
-        val dateDialogState = rememberMaterialDialogState()
-        val timeDialogState = rememberMaterialDialogState()
-        var pickeddate by remember { mutableStateOf(LocalDate.now()) }
-        var pickedtime by remember { mutableStateOf(LocalTime.NOON) }
-        val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
-        val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm").format(pickedtime) } }
         val stepSize = 50f
         val minValue = 50f
         val maxValue = 3000f
-        var sliderpos by remember { mutableFloatStateOf(50.0f) }
-        var information by rememberSaveable { mutableStateOf(false) }
-        val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        var isSheetopen by rememberSaveable { mutableStateOf(false) }
-        var cartItems by remember { mutableStateOf(listOf<CartItems>()) }
+        val context = LocalContext.current
+        val email = userviewmodel.email.collectAsState()
+        val phone = userviewmodel.phone.collectAsState()
+        val dateDialogState = rememberMaterialDialogState()
+        val timeDialogState = rememberMaterialDialogState()
+        val username = userviewmodel.username.collectAsState()
+        var clicked by remember { mutableStateOf(false) }
         var searchQuery by remember { mutableStateOf("") }
+        var isLoading by remember { mutableStateOf(false) }
+        var pickedtime by remember { mutableStateOf(LocalTime.NOON) }
+        var pickeddate by remember { mutableStateOf(LocalDate.now()) }
+        var sliderpos by remember { mutableFloatStateOf(50.0f) }
+        var launchdialogbox by remember { mutableStateOf(false) }
+        var requestreceived by remember { mutableStateOf(false) }
+        var cartItems by remember { mutableStateOf(listOf<CartItems>()) }
+        val (address, setaddress) = remember { mutableStateOf("") }
+        var information by rememberSaveable { mutableStateOf(false) }
+        var isSheetopen by rememberSaveable { mutableStateOf(false) }
         val selectedOption = remember { mutableStateOf("Appetizers") }
+        val cateringbookresult = cateringviewmodel.cateringbookingresult.observeAsState()
+        val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        val currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm").format(pickedtime) } }
+        val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
+
         val filteredItems = if (searchQuery.isNotEmpty()) {
             when (selectedOption.value) {
                 "Appetizers" -> AppetizersOption.filter { it.second.contains(searchQuery, ignoreCase = true) }
@@ -291,6 +319,27 @@ fun Caterers() {
         fun addToCart(item: CartItems) {
             cartItems = cartItems.toMutableList().apply {
                 add(item)
+            }
+        }
+
+        LaunchedEffect (clicked) {
+            if(clicked) {
+                val cateringbookresults = CateringBook(
+                    guestcount = sliderpos.toInt(),
+                    time = formattedtime,
+                    edate = formatteddate,
+                    bdate = currentDateTime,
+                    locationname = "LalQila",
+                    username = username.value,
+                    email = email.value,
+                    phone = phone.value,
+                    address = address,
+                    bill = (sliderpos.roundToInt()) * cartItems.sumOf { it.rate },
+                    items = cartItems
+                )
+                cateringviewmodel.bookcatering(cateringbookresults)
+                clicked = false
+                requestreceived = true
             }
         }
 
@@ -472,189 +521,240 @@ fun Caterers() {
                     },
                     containerColor = backgroundcolor
                 ) {
-                    if (!information) {
-                        Column (
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Top
-                        ) {
-
-                            AddHeight(20.dp)
-
-                            LazyColumn (
-                                modifier = Modifier.fillMaxWidth(fraction = 0.9f)
-                            ) {
-                                items(cartItems.size) { item ->
-                                    CartItemRow(cartItems[item], onClick = {
-                                        cartItems = cartItems.toMutableList().apply {
-                                            removeAt(item)
-                                        }
-                                        if (cartItems.isEmpty()) {
-                                            isSheetopen = false
-                                        }
-                                    })
-                                }
-                            }
-
-                            AddHeight(30.dp)
-
-                            Button(
-                                onClick = { information = true },
+                    if (!requestreceived) {
+                        if (!information) {
+                            Column (
                                 modifier = Modifier
-                                    .fillMaxWidth(fraction = 0.85f)
-                                    .height(50.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = secondarycolor,
-                                    contentColor = backgroundcolor
-                                ),
-                                shape = RoundedCornerShape(5.dp)
+                                    .fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Top
                             ) {
-                                Text("Proceed for event information")
-                            }
-                            AddHeight(20.dp)
-                        }
-                    } else {
-                        Column (
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Top
-                        ) {
-                            Row (
-                                modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Funca(
-                                    text = "${(sliderpos.roundToInt()) * cartItems.sumOf { it.rate }} ",
-                                    icon = Icons.Default.Money,
-                                    modifier = Modifier
-                                        .fillMaxWidth(fraction = 0.8f)
-                                        .height(50.dp)
-                                )
-                                Box (
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .background(secondarycolor)
-                                ){
-                                    IconButton(
-                                        onClick = { information = false }
-                                    ) {
-                                        Icon(
-                                            Icons.AutoMirrored.Filled.ArrowBack,
-                                            contentDescription = null,
-                                            tint = backgroundcolor
-                                        )
-                                    }
-                                }
-                            }
-                            AddHeight(20.dp)
-                            Row (
-                                modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Funca(
-                                    text = formatteddate,
-                                    icon = Icons.Default.CalendarMonth,
-                                    modifier = Modifier
-                                        .fillMaxWidth(fraction = 0.8f)
-                                        .height(50.dp)
-                                )
-                                Box (
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .background(secondarycolor)
+
+                                AddHeight(20.dp)
+
+                                LazyColumn (
+                                    modifier = Modifier.fillMaxWidth(fraction = 0.9f)
                                 ) {
-                                    IconButton(
-                                        onClick = { dateDialogState.show() }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.CalendarMonth,
-                                            contentDescription = null,
-                                            tint = backgroundcolor
-                                        )
+                                    items(cartItems.size) { item ->
+                                        CartItemRow(cartItems[item], onClick = {
+                                            cartItems = cartItems.toMutableList().apply {
+                                                removeAt(item)
+                                            }
+                                            if (cartItems.isEmpty()) {
+                                                isSheetopen = false
+                                            }
+                                        })
                                     }
                                 }
-                            }
-                            AddHeight(20.dp)
-                            Row (
-                                modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Funca(
-                                    text = formattedtime,
-                                    icon = Icons.Default.AccessTime,
+
+                                AddHeight(30.dp)
+
+                                Button(
+                                    onClick = { information = true },
                                     modifier = Modifier
-                                        .fillMaxWidth(fraction = 0.8f)
-                                        .height(50.dp)
-                                )
-                                Box (
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .background(secondarycolor)
+                                        .fillMaxWidth(fraction = 0.85f)
+                                        .height(50.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = secondarycolor,
+                                        contentColor = backgroundcolor
+                                    ),
+                                    shape = RoundedCornerShape(5.dp)
                                 ) {
-                                    IconButton(
-                                        onClick = { timeDialogState.show() }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.AccessTime,
-                                            contentDescription = null,
-                                            tint = backgroundcolor
-                                        )
-                                    }
+                                    Text("Proceed for event information")
                                 }
+                                AddHeight(20.dp)
                             }
-                            AddHeight(20.dp)
-                            Funca(text ="Guest count ${sliderpos.roundToInt()}", icon = Icons.Default.Person)
-                            AddHeight(10.dp)
-                            Slider(
-                                value = sliderpos,
-                                onValueChange = { newValue ->
-                                    sliderpos =
-                                        ((newValue - minValue) / stepSize).roundToInt() * stepSize + minValue
-                                },
-                                valueRange = minValue..maxValue,
-                                steps = ((maxValue - minValue) / stepSize).toInt() - 1,
+                        } else {
+                            Column (
                                 modifier = Modifier
-                                    .fillMaxWidth(0.85f)
-                                    .graphicsLayer {
-                                        shape = RoundedCornerShape(8.dp)
-                                        clip = true
-                                    },
-                                colors = SliderDefaults.colors(
-                                    thumbColor = Color.White,
-                                    activeTrackColor = secondarycolor,
-                                    inactiveTrackColor = Color(0xFF023047)
-                                ),
-                                thumb = {
-                                    Box(
+                                    .fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Top
+                            ) {
+                                Row (
+                                    modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Funca(
+                                        text = "${(sliderpos.roundToInt()) * cartItems.sumOf { it.rate }} ",
+                                        icon = Icons.Default.Money,
                                         modifier = Modifier
-                                            .size(16.dp)
-                                            .clip(CircleShape)
-                                            .background(Color.White)
+                                            .fillMaxWidth(fraction = 0.8f)
+                                            .height(50.dp)
                                     )
+                                    Box (
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .background(secondarycolor)
+                                    ){
+                                        IconButton(
+                                            onClick = { information = false }
+                                        ) {
+                                            Icon(
+                                                Icons.AutoMirrored.Filled.ArrowBack,
+                                                contentDescription = null,
+                                                tint = backgroundcolor
+                                            )
+                                        }
+                                    }
                                 }
-                            )
+                                AddHeight(20.dp)
+                                Row (
+                                    modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Funca(
+                                        text = formatteddate,
+                                        icon = Icons.Default.CalendarMonth,
+                                        modifier = Modifier
+                                            .fillMaxWidth(fraction = 0.8f)
+                                            .height(50.dp)
+                                    )
+                                    Box (
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .background(secondarycolor)
+                                    ) {
+                                        IconButton(
+                                            onClick = { dateDialogState.show() }
+                                        ) {
+                                            Icon(
+                                                Icons.Default.CalendarMonth,
+                                                contentDescription = null,
+                                                tint = backgroundcolor
+                                            )
+                                        }
+                                    }
+                                }
+                                AddHeight(20.dp)
+                                Row (
+                                    modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Funca(
+                                        text = formattedtime,
+                                        icon = Icons.Default.AccessTime,
+                                        modifier = Modifier
+                                            .fillMaxWidth(fraction = 0.8f)
+                                            .height(50.dp)
+                                    )
+                                    Box (
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .background(secondarycolor)
+                                    ) {
+                                        IconButton(
+                                            onClick = { timeDialogState.show() }
+                                        ) {
+                                            Icon(
+                                                Icons.Default.AccessTime,
+                                                contentDescription = null,
+                                                tint = backgroundcolor
+                                            )
+                                        }
+                                    }
+                                }
+                                AddHeight(20.dp)
+                                Funca(text ="Guest count ${sliderpos.roundToInt()}", icon = Icons.Default.Person)
+                                AddHeight(10.dp)
+                                Slider(
+                                    value = sliderpos,
+                                    onValueChange = { newValue ->
+                                        sliderpos =
+                                            ((newValue - minValue) / stepSize).roundToInt() * stepSize + minValue
+                                    },
+                                    valueRange = minValue..maxValue,
+                                    steps = ((maxValue - minValue) / stepSize).toInt() - 1,
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.85f)
+                                        .graphicsLayer {
+                                            shape = RoundedCornerShape(8.dp)
+                                            clip = true
+                                        },
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = Color.White,
+                                        activeTrackColor = secondarycolor,
+                                        inactiveTrackColor = Color(0xFF023047)
+                                    ),
+                                    thumb = {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(16.dp)
+                                                .clip(CircleShape)
+                                                .background(Color.White)
+                                        )
+                                    }
+                                )
 
-                            AddHeight(10.dp)
-
-                            Button(
-                                onClick = { information = true },
-                                modifier = Modifier
-                                    .fillMaxWidth(fraction = 0.85f)
-                                    .height(50.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = secondarycolor,
-                                    contentColor = backgroundcolor
-                                ),
-                                shape = RoundedCornerShape(5.dp)
-                            ) {
-                                Text("Confirm Booking")
+                                AddHeight(20.dp)
+                                TextField(
+                                    label = { Text("Address") },
+                                    value = address,
+                                    onValueChange = setaddress,
+                                    modifier = Modifier.fillMaxWidth(fraction = 0.85f).height(50.dp),
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Home,
+                                            contentDescription = null,
+                                            tint = backgroundcolor
+                                        )
+                                    },
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = secondarycolor,
+                                        unfocusedContainerColor = secondarycolor,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        disabledIndicatorColor = Color.Transparent,
+                                        disabledLabelColor = backgroundcolor,
+                                        unfocusedLabelColor = backgroundcolor,
+                                        focusedLabelColor = backgroundcolor,
+                                        disabledTextColor = backgroundcolor,
+                                        focusedTextColor = backgroundcolor,
+                                        unfocusedTextColor = backgroundcolor
+                                    ),
+                                    shape = RoundedCornerShape(10.dp),
+                                    textStyle = TextStyle(
+                                        color = backgroundcolor,
+                                        fontSize = dimens.cardfont
+                                    )
+                                )
+                                AddHeight(20.dp)
+                                Button(
+                                    onClick = { information = true },
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.85f)
+                                        .height(50.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = secondarycolor,
+                                        contentColor = backgroundcolor
+                                    ),
+                                    shape = RoundedCornerShape(5.dp)
+                                ) {
+                                    Text("Confirm Booking")
+                                }
+                                AddHeight(20.dp)
                             }
-                            AddHeight(20.dp)
+                        }
+                    }
+                    else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(170.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator()
+                            }
+                            else {
+                                Funca(
+                                    icon = Icons.Default.Error,
+                                    text = "Request Failed"
+                                )
+                            }
                         }
                     }
                 }
@@ -714,6 +814,36 @@ fun Caterers() {
                     ) {
                         pickedtime = it
                     }
+                }
+
+                if(requestreceived) {
+                    when (val request = cateringbookresult.value) {
+                        is NetworkResponse.Failure -> isLoading = false
+                        NetworkResponse.Loading -> isLoading = true
+                        is NetworkResponse.Success -> {
+                            isLoading = false
+                            if (request.data.result) {
+                                isSheetopen = false
+                                launchdialogbox = true
+                            }
+                        }
+                        null -> { }
+                    }
+                }
+
+                if(launchdialogbox) {
+                    AlertDialog(
+                        onDismissRequest = {launchdialogbox = false},
+                        confirmButton = {
+                            Button(
+                                onClick = {launchdialogbox = false}
+                            ) {
+                                Text("Close")
+                            }
+                        },
+                        title = { Text("Venue Booking") },
+                        text = { Text("your request is sent to the vendor") }
+                    )
                 }
             }
         }
