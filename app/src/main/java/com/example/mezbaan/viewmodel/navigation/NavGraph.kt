@@ -56,7 +56,9 @@ fun NavGraph(
 
         this.composable(
             route = Screens.Caterers.route
-        ) { Caterers() }
+        ) { Caterers(
+            navController = navController
+        ) }
 
         this.composable (
             route = Screens.Account.route

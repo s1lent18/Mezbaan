@@ -16,14 +16,12 @@ class UserViewModel : ViewModel() {
     val phone: StateFlow<String> get() = _phone
 
     init {
-        loadUserData()
+        setUserData(username = "d", "d", phone = "d")
     }
 
-    private fun loadUserData() {
-        viewModelScope.launch {
-            _username.value = "JohnDoe"
-            _email.value = "johndoe@example.com"
-            _phone.value = "+1234567890"
-        }
+    fun setUserData(username: String, email: String, phone: String) {
+        _username.value = username
+        _email.value = email
+        _phone.value = phone
     }
 }

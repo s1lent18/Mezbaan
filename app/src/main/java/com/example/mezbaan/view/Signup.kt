@@ -59,7 +59,6 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mezbaan.R
-import com.example.mezbaan.model.dataclasses.LoginReq
 import com.example.mezbaan.model.dataclasses.SignUpReq
 import com.example.mezbaan.model.response.NetworkResponse
 import com.example.mezbaan.ui.theme.alterblack
@@ -71,6 +70,12 @@ import com.example.mezbaan.viewmodel.SignupViewModel
 import com.example.mezbaan.viewmodel.navigation.Screens
 import com.google.android.gms.auth.api.signin.GoogleSignIn.getClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import kotlinx.coroutines.delay
+
+fun validateEmail(email: String): Boolean {
+    val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\$".toRegex()
+    return email.matches(emailRegex)
+}
 
 @Composable
 fun Input(
@@ -120,6 +125,7 @@ fun Signup(
     signupviewmodel: SignupViewModel = viewModel()
 ) {
     Surface {
+
         val (email, setemail) = remember { mutableStateOf("") }
         val (phonenumber, setphonenumber) = remember { mutableStateOf("") }
         var passwordvisibility by remember { mutableStateOf(false) }
@@ -134,6 +140,7 @@ fun Signup(
         val icon = if (passwordvisibility) painterResource(id = R.drawable.eye) else painterResource(id = R.drawable.lock)
         var clicked by remember { mutableStateOf(false) }
         val keyboardController = LocalSoftwareKeyboardController.current
+        val phonevalid = phonenumber.matches(Regex("^[0-9]+$"))
 
         val launcher = rememberfirebaselauncher(
             onAuthComplete = { result ->
@@ -265,7 +272,16 @@ fun Signup(
                 if (!isLoading) {
                     Button(
                         onClick = {
-                            if (username.isNotEmpty() && password.isNotEmpty() && phonenumber.isNotEmpty() && email.isNotEmpty()) {
+                            if (
+                                username.isNotEmpty() &&
+                                password.isNotEmpty() &&
+                                password.length >= 8 &&
+                                phonenumber.isNotEmpty() &&
+                                phonenumber.length == 11 &&
+                                email.isNotEmpty() &&
+                                phonevalid &&
+                                validateEmail(email)
+                            ) {
                                 clicked = true
                                 keyboardController?.hide()
                             }
@@ -280,6 +296,18 @@ fun Signup(
                             }
                             else if (phonenumber.isEmpty()) {
                                 Toast.makeText(context, "Enter phonenumber", Toast.LENGTH_SHORT).show()
+                            }
+                            else if (password.length < 8) {
+                                Toast.makeText(context, "Small Length of password", Toast.LENGTH_LONG).show()
+                            }
+                            else if (phonenumber.length < 11) {
+                                Toast.makeText(context, "Small Length Of phone number", Toast.LENGTH_LONG).show()
+                            }
+                            else if (!phonevalid) {
+                                Toast.makeText(context, "Phone number should only contain numbers", Toast.LENGTH_LONG).show()
+                            }
+                            else if (!validateEmail(email)) {
+                                Toast.makeText(context, "Invalid Format", Toast.LENGTH_LONG).show()
                             }
                         },
                         modifier = Modifier
@@ -401,18 +429,26 @@ fun Signup(
                     )
                 }
 
-                if(username.isNotEmpty() && password.isNotEmpty() && email.isNotEmpty() && phonenumber.isNotEmpty() && requestreceived) {
-                    when (val request = signupresult.value) {
+                if(
+                    username.isNotEmpty() &&
+                    password.isNotEmpty() &&
+                    email.isNotEmpty() &&
+                    phonenumber.isNotEmpty() &&
+                    requestreceived
+                ) {
+                    when (signupresult.value) {
                         is NetworkResponse.Failure -> {
                             isLoading = false
-                            Toast.makeText(context, "Wrong Username/Password", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "User Already Exists", Toast.LENGTH_LONG).show()
                         }
                         NetworkResponse.Loading -> {
                             isLoading = true
                         }
                         is NetworkResponse.Success -> {
                             isLoading = false
-                            if (request.data.result) {
+                            LaunchedEffect(Unit) {
+                                Toast.makeText(context, "Account created successfully!", Toast.LENGTH_LONG).show()
+                                delay(3000)
                                 navController.navigate(route = Screens.Home.route)
                             }
                         }

@@ -1,7 +1,7 @@
 package com.example.mezbaan.model.dataclasses
 
 data class LoginReq(
-    val username: String,
+    val email: String,
     val password: String,
-    val roleId: Int = 3
+    val roleId: String = "3"
 )

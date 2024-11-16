@@ -723,7 +723,10 @@ fun Caterers(
                                 )
                                 AddHeight(20.dp)
                                 Button(
-                                    onClick = { information = true },
+                                    onClick = {
+                                        clicked = true
+                                        information = true
+                                    },
                                     modifier = Modifier
                                         .fillMaxWidth(fraction = 0.85f)
                                         .height(50.dp),

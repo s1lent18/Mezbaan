@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -42,6 +43,7 @@ import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
 import com.example.mezbaan.viewmodel.AuthViewModel
+import com.example.mezbaan.viewmodel.UserViewModel
 import com.example.mezbaan.viewmodel.navigation.Screens
 import com.exyte.animatednavbar.AnimatedNavigationBar
 import com.exyte.animatednavbar.animation.balltrajectory.Parabolic
@@ -53,8 +55,12 @@ import com.exyte.animatednavbar.utils.noRippleClickable
 @Composable
 fun Account(
     navController: NavController,
-    authviewmodel: AuthViewModel = viewModel()
+    authviewmodel: AuthViewModel = viewModel(),
+    userviewmodel: UserViewModel = viewModel()
 ) {
+    val username by userviewmodel.username.collectAsState()
+    val email by userviewmodel.email.collectAsState()
+    val phone by userviewmodel.phone.collectAsState()
     val user by authviewmodel.user.observeAsState()
     val navigationBarItems = remember { NavigationBarItems.entries }
     var selectedIndex by remember { mutableIntStateOf(2) }
@@ -122,57 +128,55 @@ fun Account(
             }
         }
     ) {
-        if (user != null) {
-            val name = user?.displayName
-            val pp = user?.photoUrl
+        val name = user?.displayName ?: username
+        val pp = user?.photoUrl
 
-            Surface {
-                ConstraintLayout(
+        Surface {
+            ConstraintLayout(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 80.dp)
+            ) {
+                val (displaybox) = createRefs()
+
+                Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = 80.dp)
-                ) {
-                    val (displaybox) = createRefs()
-
-                    Box(
-                        modifier = Modifier
-                            .constrainAs(displaybox) {
-                                top.linkTo(parent.top)
-                                start.linkTo(parent.start)
-                                end.linkTo(parent.end)
-                                height = Dimension.percent(0.46f)
-                            }
-                            .background(backgroundcolor)
-                            .clip(RoundedCornerShape(bottomStart = 50.dp, bottomEnd = 50.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-
-                            pp?.let {
-                                Box(
-                                    modifier = Modifier.clip(CircleShape)
-                                ) {
-                                    Image(
-                                        painter = rememberAsyncImagePainter(model = it),
-                                        contentDescription = "Profile Picture",
-                                        modifier = Modifier.size(100.dp)
-                                    )
-                                }
-                            }
-
-                            AddHeight(dimens.medium3)
-
-                            Text(
-                                text = "Hello, $name",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = dimens.fontsize,
-                                color = secondarycolor
-                            )
+                        .constrainAs(displaybox) {
+                            top.linkTo(parent.top)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                            height = Dimension.percent(0.46f)
                         }
+                        .background(backgroundcolor)
+                        .clip(RoundedCornerShape(bottomStart = 50.dp, bottomEnd = 50.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+
+                        pp?.let {
+                            Box(
+                                modifier = Modifier.clip(CircleShape)
+                            ) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(model = it),
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier.size(100.dp)
+                                )
+                            }
+                        }
+
+                        AddHeight(dimens.medium3)
+
+                        Text(
+                            text = "Hello, $name",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = dimens.fontsize,
+                            color = secondarycolor
+                        )
                     }
                 }
             }

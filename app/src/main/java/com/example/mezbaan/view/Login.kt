@@ -68,6 +68,7 @@ import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
 import com.example.mezbaan.viewmodel.AuthViewModel
 import com.example.mezbaan.viewmodel.LoginViewModel
+import com.example.mezbaan.viewmodel.UserViewModel
 import com.example.mezbaan.viewmodel.navigation.Screens
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
@@ -82,6 +83,7 @@ import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -185,7 +187,8 @@ fun CustomFacebookSignInButton(
 fun Login(
     navController: NavController,
     authviewmodel: AuthViewModel = viewModel(),
-    loginviewmodel: LoginViewModel = viewModel()
+    loginviewmodel: LoginViewModel = viewModel(),
+    userviewmodel: UserViewModel = viewModel()
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         val (username, setUsername) = remember { mutableStateOf("") }
@@ -446,18 +449,20 @@ fun Login(
                 }
                 AddHeight(40.dp)
                 if(username.isNotEmpty() && password.isNotEmpty() && requestreceived) {
-                    when (val request = loginresult.value) {
+                    when (val result = loginresult.value) {
                         is NetworkResponse.Failure -> {
                             isLoading = false
-                            Toast.makeText(context, "Wrong Username/Password", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "Incorrect Credentials", Toast.LENGTH_LONG).show()
                         }
                         NetworkResponse.Loading -> {
                             isLoading = true
-
                         }
                         is NetworkResponse.Success -> {
                             isLoading = false
-                            if (request.data.result) {
+                            userviewmodel.setUserData(result.data.user.name, result.data.user.email, result.data.user.phone)
+                            LaunchedEffect(Unit) {
+                                Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
+                                delay(2000)
                                 navController.navigate(route = Screens.Home.route)
                             }
                         }

@@ -5,5 +5,5 @@ data class SignUpReq(
     val phone: String,
     val email: String,
     val password: String,
-    val roleId: Int = 3
+    val roleId: String = "3"
 )

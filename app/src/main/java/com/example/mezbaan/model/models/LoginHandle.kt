@@ -1,5 +1,6 @@
 package com.example.mezbaan.model.models
 
 data class LoginHandle(
-    val result: Boolean
+    val token: String,
+    val user: User
 )

@@ -30,7 +30,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.Star
@@ -40,6 +42,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -56,8 +59,10 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -78,13 +83,18 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.mezbaan.R
+import com.example.mezbaan.model.dataclasses.PhotographerBook
+import com.example.mezbaan.model.response.NetworkResponse
 import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
+import com.example.mezbaan.viewmodel.PhotographerViewModel
+import com.example.mezbaan.viewmodel.UserViewModel
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
@@ -94,6 +104,7 @@ import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
@@ -130,35 +141,48 @@ fun MediaRep(
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun Vendors() {
+fun Vendors(
+    userviewmodel : UserViewModel = viewModel(),
+    photographerviewmodel : PhotographerViewModel = viewModel()
+) {
     Surface {
         val stepSize = 1f
         val minValue = 1f
-        val maxValue = 12f
         val itemCount = 5
-        val context = LocalContext.current
+        val maxValue = 12f
         val today = LocalDate.now()
+        val context = LocalContext.current
         val listState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
-        val selected = remember { mutableStateOf(false) }
-        val dateList = List(30) { today.plusDays(it.toLong()) }
-        val butcolor = if (selected.value) secondarycolor else Color.White
-        val buttext = if (selected.value) "Liked" else "Like"
+        val email = userviewmodel.email.collectAsState()
+        val phone = userviewmodel.phone.collectAsState()
         val dateDialogState = rememberMaterialDialogState()
         val timeDialogState = rememberMaterialDialogState()
-        var pickeddate by remember { mutableStateOf(LocalDate.now()) }
-        var pickedtime by remember { mutableStateOf(LocalTime.NOON) }
-        val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
-        val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm a").format(pickedtime) } }
-        var information by rememberSaveable { mutableStateOf(false) }
-        val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        var isSheetopen by rememberSaveable { mutableStateOf(false) }
-        var launchdialog by remember { mutableStateOf(false) }
-        var launchhourpicker by remember { mutableStateOf(false) }
+        val username = userviewmodel.username.collectAsState()
+        var clicked by remember { mutableStateOf(false) }
+        val selected = remember { mutableStateOf(false) }
+        var isLoading by remember { mutableStateOf(false) }
         var selectedoption by remember { mutableStateOf("") }
+        val dateList = List(30) { today.plusDays(it.toLong()) }
+        var launchdialog by remember { mutableStateOf(false) }
+        var pickedtime by remember { mutableStateOf(LocalTime.NOON) }
+        var pickeddate by remember { mutableStateOf(LocalDate.now()) }
+        var launchdialogbox by remember { mutableStateOf(false) }
+        var requestreceived by remember { mutableStateOf(false) }
+        val buttext = if (selected.value) "Liked" else "Like"
+        var launchhourpicker by remember { mutableStateOf(false) }
+        val (address, setaddress) = remember { mutableStateOf("") }
+        var isScrollingForward by remember { mutableStateOf(true) }
+        var information by rememberSaveable { mutableStateOf(false) }
+        var isSheetopen by rememberSaveable { mutableStateOf(false) }
+        val butcolor = if (selected.value) secondarycolor else Color.White
+        val photographerbookresult = photographerviewmodel.photographerbookingresult.observeAsState()
+        val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         var sliderpos by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
         var currentIndex by remember { androidx.compose.runtime.mutableIntStateOf(0) }
-        var isScrollingForward by remember { mutableStateOf(true) }
+        val currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm a").format(pickedtime) } }
+        val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
 
         LaunchedEffect(Unit) {
             while (true) {
@@ -178,6 +202,26 @@ fun Vendors() {
                         isScrollingForward = true
                     }
                 }
+            }
+        }
+
+        LaunchedEffect (clicked) {
+            if(clicked) {
+                val photographerbookresults = PhotographerBook(
+                    time = formattedtime,
+                    edate = formatteddate,
+                    bdate = currentDateTime,
+                    username = username.value,
+                    email = email.value,
+                    phone = phone.value,
+                    address = address,
+                    bill = (25000 * sliderpos.toInt()),
+                    eventtype = selectedoption,
+                    hours = sliderpos.toInt(),
+                )
+                photographerviewmodel.bookphotographer(photographerbookresults)
+                clicked = false
+                requestreceived = true
             }
         }
 
@@ -510,134 +554,189 @@ fun Vendors() {
                         },
                         containerColor = backgroundcolor
                     ) {
-                        Column (
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .navigationBarsPadding(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Top
-                        ) {
-                            Row (
-                                modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Funca(
-                                    text = formatteddate,
-                                    icon = Icons.Default.CalendarMonth,
-                                    modifier = Modifier
-                                        .fillMaxWidth(fraction = 0.8f)
-                                        .height(50.dp)
-                                )
-                                Box (
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .background(secondarycolor)
-                                ) {
-                                    IconButton(
-                                        onClick = { dateDialogState.show() }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.CalendarMonth,
-                                            contentDescription = null,
-                                            tint = backgroundcolor
-                                        )
-                                    }
-                                }
-                            }
-                            AddHeight(20.dp)
-                            Row (
-                                modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Funca(
-                                    text = "$formattedtime - ${sliderpos.toInt()} hours",
-                                    icon = Icons.Default.AccessTime,
-                                    modifier = Modifier
-                                        .fillMaxWidth(fraction = 0.65f)
-                                        .height(50.dp)
-                                )
-                                Box (
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .background(secondarycolor)
-                                ) {
-                                    IconButton(
-                                        onClick = { timeDialogState.show() }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.AccessTime,
-                                            contentDescription = null,
-                                            tint = backgroundcolor
-                                        )
-                                    }
-                                }
-                                Box (
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .background(secondarycolor)
-                                ) {
-                                    IconButton(
-                                        onClick = { launchhourpicker = true }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.AlarmAdd,
-                                            contentDescription = null,
-                                            tint = backgroundcolor
-                                        )
-                                    }
-                                }
-                            }
-                            AddHeight(20.dp)
-                            Row (
-                                modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Funca(
-                                    text = "Event Type: $selectedoption",
-                                    icon = Icons.Default.Event,
-                                    modifier = Modifier
-                                        .fillMaxWidth(fraction = 0.8f)
-                                        .height(50.dp)
-                                )
-                                Box (
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .background(secondarycolor)
-                                ) {
-                                    IconButton(
-                                        onClick = { launchdialog = true }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Event,
-                                            contentDescription = null,
-                                            tint = backgroundcolor
-                                        )
-                                    }
-                                }
-                            }
-                            AddHeight(20.dp)
-                            Funca(
-                                text = "Bill: ${25000 * sliderpos.toInt()}",
-                                icon = Icons.Default.Money,
-                            )
-                            AddHeight(30.dp)
-                            Button(
-                                onClick = { information = true },
+                        if (!requestreceived) {
+                            Column (
                                 modifier = Modifier
-                                    .fillMaxWidth(fraction = 0.85f)
-                                    .height(50.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = secondarycolor,
-                                    contentColor = backgroundcolor
-                                ),
-                                shape = RoundedCornerShape(5.dp)
+                                    .fillMaxWidth()
+                                    .navigationBarsPadding(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Top
                             ) {
-                                Text("Confirm Booking")
+                                Row (
+                                    modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Funca(
+                                        text = formatteddate,
+                                        icon = Icons.Default.CalendarMonth,
+                                        modifier = Modifier
+                                            .fillMaxWidth(fraction = 0.8f)
+                                            .height(50.dp)
+                                    )
+                                    Box (
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .background(secondarycolor)
+                                    ) {
+                                        IconButton(
+                                            onClick = { dateDialogState.show() }
+                                        ) {
+                                            Icon(
+                                                Icons.Default.CalendarMonth,
+                                                contentDescription = null,
+                                                tint = backgroundcolor
+                                            )
+                                        }
+                                    }
+                                }
+                                AddHeight(20.dp)
+                                Row (
+                                    modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Funca(
+                                        text = "$formattedtime - ${sliderpos.toInt()} hours",
+                                        icon = Icons.Default.AccessTime,
+                                        modifier = Modifier
+                                            .fillMaxWidth(fraction = 0.65f)
+                                            .height(50.dp)
+                                    )
+                                    Box (
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .background(secondarycolor)
+                                    ) {
+                                        IconButton(
+                                            onClick = { timeDialogState.show() }
+                                        ) {
+                                            Icon(
+                                                Icons.Default.AccessTime,
+                                                contentDescription = null,
+                                                tint = backgroundcolor
+                                            )
+                                        }
+                                    }
+                                    Box (
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .background(secondarycolor)
+                                    ) {
+                                        IconButton(
+                                            onClick = { launchhourpicker = true }
+                                        ) {
+                                            Icon(
+                                                Icons.Default.AlarmAdd,
+                                                contentDescription = null,
+                                                tint = backgroundcolor
+                                            )
+                                        }
+                                    }
+                                }
+                                AddHeight(20.dp)
+                                Row (
+                                    modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Funca(
+                                        text = "Event Type: $selectedoption",
+                                        icon = Icons.Default.Event,
+                                        modifier = Modifier
+                                            .fillMaxWidth(fraction = 0.8f)
+                                            .height(50.dp)
+                                    )
+                                    Box (
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .background(secondarycolor)
+                                    ) {
+                                        IconButton(
+                                            onClick = { launchdialog = true }
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Event,
+                                                contentDescription = null,
+                                                tint = backgroundcolor
+                                            )
+                                        }
+                                    }
+                                }
+                                AddHeight(20.dp)
+                                Funca(
+                                    text = "Bill: ${25000 * sliderpos.toInt()}",
+                                    icon = Icons.Default.Money,
+                                )
+                                AddHeight(20.dp)
+                                TextField(
+                                    label = { Text("Address") },
+                                    value = address,
+                                    onValueChange = setaddress,
+                                    modifier = Modifier.fillMaxWidth(fraction = 0.85f).height(50.dp),
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Home,
+                                            contentDescription = null,
+                                            tint = backgroundcolor
+                                        )
+                                    },
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = secondarycolor,
+                                        unfocusedContainerColor = secondarycolor,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        disabledIndicatorColor = Color.Transparent,
+                                        disabledLabelColor = backgroundcolor,
+                                        unfocusedLabelColor = backgroundcolor,
+                                        focusedLabelColor = backgroundcolor,
+                                        disabledTextColor = backgroundcolor,
+                                        focusedTextColor = backgroundcolor,
+                                        unfocusedTextColor = backgroundcolor
+                                    ),
+                                    shape = RoundedCornerShape(10.dp),
+                                    textStyle = TextStyle(
+                                        color = backgroundcolor,
+                                        fontSize = dimens.cardfont
+                                    )
+                                )
+                                AddHeight(20.dp)
+                                Button(
+                                    onClick = {
+                                        clicked = true
+                                        information = true
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.85f)
+                                        .height(50.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = secondarycolor,
+                                        contentColor = backgroundcolor
+                                    ),
+                                    shape = RoundedCornerShape(5.dp)
+                                ) {
+                                    Text("Confirm Booking")
+                                }
+                                AddHeight(20.dp)
                             }
-                            AddHeight(20.dp)
+                        }
+                        else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(170.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (isLoading) {
+                                    CircularProgressIndicator()
+                                }
+                                else {
+                                    Funca(
+                                        icon = Icons.Default.Error,
+                                        text = "Request Failed"
+                                    )
+                                }
+                            }
                         }
                     }
                     MaterialDialog (
@@ -807,6 +906,36 @@ fun Vendors() {
                                 }
                             },
                             containerColor = backgroundcolor
+                        )
+                    }
+
+                    if(requestreceived) {
+                        when (val request = photographerbookresult.value) {
+                            is NetworkResponse.Failure -> isLoading = false
+                            NetworkResponse.Loading -> isLoading = true
+                            is NetworkResponse.Success -> {
+                                isLoading = false
+                                if (request.data.result) {
+                                    isSheetopen = false
+                                    launchdialogbox = true
+                                }
+                            }
+                            null -> { }
+                        }
+                    }
+
+                    if(launchdialogbox) {
+                        AlertDialog(
+                            onDismissRequest = {launchdialogbox = false},
+                            confirmButton = {
+                                Button(
+                                    onClick = {launchdialogbox = false}
+                                ) {
+                                    Text("Close")
+                                }
+                            },
+                            title = { Text("Venue Booking") },
+                            text = { Text("your request is sent to the vendor") }
                         )
                     }
                 }
