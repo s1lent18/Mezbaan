@@ -1,6 +1,8 @@
 package com.example.mezbaan.viewmodel.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -18,6 +20,7 @@ import com.example.mezbaan.view.Messages
 import com.example.mezbaan.view.Vendors
 import com.example.mezbaan.view.Venues
 import com.example.mezbaan.viewmodel.AuthViewModel
+import com.example.mezbaan.viewmodel.UserViewModel
 
 @Composable
 fun NavGraph(
@@ -25,9 +28,14 @@ fun NavGraph(
     authviewmodel: AuthViewModel = viewModel()
 ) {
     val user by authviewmodel.user.observeAsState()
+
+    val userviewmodel : UserViewModel = viewModel()
+    val token by userviewmodel.token.collectAsState()
+    Log.d("LoginViewModel", "token: $token")
+
     NavHost(
         navController = navController,
-        startDestination = if (user == null) Screens.Landing.route else Screens.Home.route
+        startDestination = if (user == null && token.isEmpty()) Screens.Landing.route else Screens.Home.route
     ) {
 
         this.composable(
@@ -38,6 +46,7 @@ fun NavGraph(
             route = Screens.Login.route
         ) { Login(
             navController = navController,
+            userviewmodel = userviewmodel
         ) }
 
         this.composable(
@@ -65,6 +74,7 @@ fun NavGraph(
         ) {
             Account(
                 navController = navController,
+                userviewmodel = userviewmodel
             )
         }
 

@@ -1,9 +1,9 @@
 plugins {
-    alias(libs.plugins.android.application) // Ensure you are using correct alias for Android plugin
-    id("org.jetbrains.kotlin.android") // Kotlin Android Plugin
-    //id("com.google.devtools.ksp") version "1.9.0-1.0.12" // KSP Plugin
-    //id("com.google.dagger.hilt.android") version "2.51.1" // Hilt Plugin
-    alias(libs.plugins.google.gms.google.services) // Google Services Plugin
+    alias(libs.plugins.android.application)
+    id("org.jetbrains.kotlin.android")
+    id("com.google.devtools.ksp")
+    id ("dagger.hilt.android.plugin")
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -33,11 +33,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -55,6 +55,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.palette.ktx)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.camera.core)
@@ -85,28 +86,26 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
-    //implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.androidx.constraintlayout.compose)
-    //implementation(libs.androidx.hilt.navigation.fragment)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.material3.window.size.android)
 
-    //ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
-    //testImplementation(libs.hilt.android.testing)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
-    //androidTestImplementation(libs.hilt.android.testing)
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    //kspAndroidTest(libs.hilt.compiler)
-    //kspTest(libs.hilt.compiler)
+    implementation (libs.hilt.android)
+    ksp (libs.hilt.android.compiler)
+    //implementation (libs.androidx.hilt.lifecycle.viewmodel)
+    ksp (libs.androidx.hilt.compiler)
+    implementation (libs.androidx.hilt.navigation.compose)
 }

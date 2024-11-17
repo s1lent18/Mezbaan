@@ -56,11 +56,10 @@ import com.exyte.animatednavbar.utils.noRippleClickable
 fun Account(
     navController: NavController,
     authviewmodel: AuthViewModel = viewModel(),
-    userviewmodel: UserViewModel = viewModel()
+    userviewmodel: UserViewModel
 ) {
     val username by userviewmodel.username.collectAsState()
-    val email by userviewmodel.email.collectAsState()
-    val phone by userviewmodel.phone.collectAsState()
+    val token by userviewmodel.token.collectAsState()
     val user by authviewmodel.user.observeAsState()
     val navigationBarItems = remember { NavigationBarItems.entries }
     var selectedIndex by remember { mutableIntStateOf(2) }
@@ -95,7 +94,12 @@ fun Account(
                                     }
 
                                     NavigationBarItems.Logout -> {
-                                        authviewmodel.signOut()
+                                        if (user != null) {
+                                            authviewmodel.signOut()
+                                        }
+                                        if (token.isNotEmpty()) {
+                                            userviewmodel.logout()
+                                        }
                                         navController.navigate(Screens.Login.route) {
                                             popUpTo(Screens.Home.route) { inclusive = true }
                                         }
@@ -105,7 +109,9 @@ fun Account(
 
                                     }
 
-                                    NavigationBarItems.Msg -> {}
+                                    NavigationBarItems.Msg -> {
+                                        navController.navigate(Screens.Msg.route)
+                                    }
                                 }
                             },
 

@@ -188,7 +188,7 @@ fun Login(
     navController: NavController,
     authviewmodel: AuthViewModel = viewModel(),
     loginviewmodel: LoginViewModel = viewModel(),
-    userviewmodel: UserViewModel = viewModel()
+    userviewmodel: UserViewModel
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         val (username, setUsername) = remember { mutableStateOf("") }
@@ -453,14 +453,18 @@ fun Login(
                         is NetworkResponse.Failure -> {
                             isLoading = false
                             Toast.makeText(context, "Incorrect Credentials", Toast.LENGTH_LONG).show()
+                            requestreceived = false
                         }
                         NetworkResponse.Loading -> {
                             isLoading = true
                         }
                         is NetworkResponse.Success -> {
                             isLoading = false
-                            userviewmodel.setUserData(result.data.user.name, result.data.user.email, result.data.user.phone)
                             LaunchedEffect(Unit) {
+                                userviewmodel.saveToken(token = result.data.token)
+                                userviewmodel.saveUsername(result.data.user.name)
+                                userviewmodel.saveEmail(result.data.user.email)
+                                userviewmodel.savePhone(result.data.user.phone)
                                 Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
                                 delay(2000)
                                 navController.navigate(route = Screens.Home.route)

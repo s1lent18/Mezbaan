@@ -10,8 +10,6 @@ import com.example.mezbaan.model.dataclasses.LoginReq
 import com.example.mezbaan.model.models.LoginHandle
 import com.example.mezbaan.model.response.NetworkResponse
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.toRequestBody
 
 class LoginViewModel : ViewModel() {
 
