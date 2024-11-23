@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mezbaan.model.api.RetrofitInstance
-import com.example.mezbaan.model.dataclasses.SignUpReq
+import com.example.mezbaan.model.requests.SignUpReq
 import com.example.mezbaan.model.response.NetworkResponse
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull

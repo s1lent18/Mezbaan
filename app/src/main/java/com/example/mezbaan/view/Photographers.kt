@@ -139,10 +139,9 @@ fun MediaRep(
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
 @Composable
 fun Vendors(
-    userviewmodel : UserViewModel = viewModel(),
+    userviewmodel : UserViewModel,
     photographerviewmodel : PhotographerViewModel = viewModel()
 ) {
     Surface {

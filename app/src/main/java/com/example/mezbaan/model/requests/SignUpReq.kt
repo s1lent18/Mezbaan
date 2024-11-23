@@ -1,4 +1,4 @@
-package com.example.mezbaan.model.dataclasses
+package com.example.mezbaan.model.requests
 
 data class SignUpReq(
     val username: String,

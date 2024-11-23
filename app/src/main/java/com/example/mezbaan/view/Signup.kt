@@ -59,7 +59,7 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mezbaan.R
-import com.example.mezbaan.model.dataclasses.SignUpReq
+import com.example.mezbaan.model.requests.SignUpReq
 import com.example.mezbaan.model.response.NetworkResponse
 import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor

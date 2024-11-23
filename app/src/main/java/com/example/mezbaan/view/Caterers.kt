@@ -6,8 +6,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,11 +24,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.Person
@@ -82,7 +87,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.mezbaan.R
 import com.example.mezbaan.model.dataclasses.CartItems
-import com.example.mezbaan.model.dataclasses.CateringBook
 import com.example.mezbaan.model.dataprovider.AppetizersOption
 import com.example.mezbaan.model.dataprovider.CaterersOption
 import com.example.mezbaan.model.dataprovider.DessertsOption
@@ -93,7 +97,6 @@ import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
-import com.example.mezbaan.viewmodel.CateringViewModel
 import com.example.mezbaan.viewmodel.UserViewModel
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
@@ -265,9 +268,7 @@ fun DialogFood(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Caterers(
-    navController: NavController,
-    userviewmodel: UserViewModel = viewModel(),
-    cateringviewmodel: CateringViewModel = viewModel()
+    userviewmodel: UserViewModel,
 ) {
     Surface {
         val stepSize = 50f
@@ -291,8 +292,9 @@ fun Caterers(
         val (address, setaddress) = remember { mutableStateOf("") }
         var information by rememberSaveable { mutableStateOf(false) }
         var isSheetopen by rememberSaveable { mutableStateOf(false) }
+        var expanded by remember { mutableStateOf(false) }
+        var selected by remember { mutableStateOf(false) }
         val selectedOption = remember { mutableStateOf("Appetizers") }
-        val cateringbookresult = cateringviewmodel.cateringbookingresult.observeAsState()
         val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         val currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm").format(pickedtime) } }
@@ -322,27 +324,6 @@ fun Caterers(
             }
         }
 
-        LaunchedEffect (clicked) {
-            if(clicked) {
-                val cateringbookresults = CateringBook(
-                    guestcount = sliderpos.toInt(),
-                    time = formattedtime,
-                    edate = formatteddate,
-                    bdate = currentDateTime,
-                    locationname = "LalQila",
-                    username = username.value,
-                    email = email.value,
-                    phone = phone.value,
-                    address = address,
-                    bill = (sliderpos.roundToInt()) * cartItems.sumOf { it.rate },
-                    items = cartItems
-                )
-                cateringviewmodel.bookcatering(cateringbookresults)
-                clicked = false
-                requestreceived = true
-            }
-        }
-
         Column (
             modifier = Modifier
                 .fillMaxSize()
@@ -354,7 +335,7 @@ fun Caterers(
                     .fillMaxSize()
                     .padding(top = 80.dp, bottom = 20.dp)
             ) {
-                val (searchrow, catheading, boxes, fooditems, checkoutbutton) = createRefs()
+                val (searchrow, catheading, boxes, expandable, fooditems, checkoutbutton) = createRefs()
 
                 Row(
                     modifier = Modifier.constrainAs(catheading) {
@@ -422,46 +403,150 @@ fun Caterers(
                     },
                     contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
                 ) {
-                    items(CaterersOption.size) { index ->
-                        val (image, text) = CaterersOption[index]
+                    if (selected) {
+                        items(CaterersOption.size) { index ->
+                            val (image, text) = CaterersOption[index]
 
-                        Itemstobook(
-                            image = if (image is Int) painterResource(image) else image as ImageVector,
-                            text = text,
-                            isSelected = selectedOption.value == text,
-                            onclick = { selectedOption.value = text }
-                        )
+                            Itemstobook(
+                                image = if (image is Int) painterResource(image) else image as ImageVector,
+                                text = text,
+                                isSelected = selectedOption.value == text,
+                                onclick = { selectedOption.value = text }
+                            )
 
-                        AddWidth(dimens.scrollspacer)
+                            AddWidth(dimens.scrollspacer)
+                        }
                     }
                 }
 
+                Row(
+                    modifier = Modifier
+                        .constrainAs(expandable) {
+                        top.linkTo(boxes.bottom, margin = 10.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        width = Dimension.percent(0.9f)
+                    }
+                    .height(IntrinsicSize.Min),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(fraction = 0.5f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(secondarycolor)
+                        ) {
+                            IconButton(
+                                onClick = { expanded = !expanded }
+                            ) {
+                                Icon(
+                                    imageVector = if (selected) Icons.AutoMirrored.Filled.List else Icons.Default.CreditCard,
+                                    contentDescription = null,
+                                    tint = backgroundcolor
+                                )
+                            }
+                        }
+
+                        if (expanded) {
+                            Box (
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(backgroundcolor)
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        expanded = !expanded
+                                        selected = true
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.List,
+                                        contentDescription = null,
+                                        tint = secondarycolor
+                                    )
+                                }
+                            }
+
+                            Box (
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(backgroundcolor)
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        expanded = !expanded
+                                        selected = false
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.CreditCard,
+                                        contentDescription = null,
+                                        tint = secondarycolor
+                                    )
+                                }
+                            }
+
+
+                        }
+                    }
+
+                    if (!selected) {
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(backgroundcolor)
+                        ) {
+                            IconButton (
+                                onClick = {},
+                            ) {
+                                Icon(
+                                    Icons.Default.FilterAlt,
+                                    contentDescription = null,
+                                    tint = secondarycolor
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(30.dp).constrainAs(createRef()) {
+                    top.linkTo(expandable.bottom)
+                    start.linkTo(parent.start)
+                })
+
                 Box(
                     modifier = Modifier.constrainAs(fooditems) {
-                        top.linkTo(boxes.bottom)
+                        top.linkTo(expandable.bottom, margin = 20.dp)
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
                         bottom.linkTo(checkoutbutton.top, margin = 5.dp)
-                        height = Dimension.percent(0.45f)
+                        height = Dimension.fillToConstraints
                     }
                 ) {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp)
-                    ) {
-                        items(filteredItems.size) { option ->
-                            Display(
-                                imageUrl = filteredItems[option].first,
-                                title = filteredItems[option].second,
-                                addtocart = { addToCart(
-                                    CartItems(imageUrl = filteredItems[option].first,
-                                        title = filteredItems[option].second,
-                                        rate = 100
-                                    )
-                                ) }
-                            )
+                    if (selected) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+                        ) {
+                            items(filteredItems.size) { option ->
+                                Display(
+                                    imageUrl = filteredItems[option].first,
+                                    title = filteredItems[option].second,
+                                    addtocart = { addToCart(
+                                        CartItems(imageUrl = filteredItems[option].first,
+                                            title = filteredItems[option].second,
+                                            rate = 100
+                                        )
+                                    ) }
+                                )
+                            }
                         }
                     }
                 }
@@ -694,7 +779,9 @@ fun Caterers(
                                     label = { Text("Address") },
                                     value = address,
                                     onValueChange = setaddress,
-                                    modifier = Modifier.fillMaxWidth(fraction = 0.85f).height(50.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.85f)
+                                        .height(50.dp),
                                     leadingIcon = {
                                         Icon(
                                             Icons.Default.Home,
@@ -816,21 +903,6 @@ fun Caterers(
                         is24HourClock = true
                     ) {
                         pickedtime = it
-                    }
-                }
-
-                if(requestreceived) {
-                    when (val request = cateringbookresult.value) {
-                        is NetworkResponse.Failure -> isLoading = false
-                        NetworkResponse.Loading -> isLoading = true
-                        is NetworkResponse.Success -> {
-                            isLoading = false
-                            if (request.data.result) {
-                                isSheetopen = false
-                                launchdialogbox = true
-                            }
-                        }
-                        null -> { }
                     }
                 }
 

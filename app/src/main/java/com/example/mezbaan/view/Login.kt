@@ -60,7 +60,7 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mezbaan.R
-import com.example.mezbaan.model.dataclasses.LoginReq
+import com.example.mezbaan.model.requests.LoginReq
 import com.example.mezbaan.model.response.NetworkResponse
 import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor
@@ -461,10 +461,13 @@ fun Login(
                         is NetworkResponse.Success -> {
                             isLoading = false
                             LaunchedEffect(Unit) {
-                                userviewmodel.saveToken(token = result.data.token)
-                                userviewmodel.saveUsername(result.data.user.name)
-                                userviewmodel.saveEmail(result.data.user.email)
-                                userviewmodel.savePhone(result.data.user.phone)
+                                userviewmodel.saveUserData(
+                                    token = result.data.token,
+                                    name = result.data.user.name,
+                                    email = result.data.user.email,
+                                    image = result.data.user.image,
+                                    phone = result.data.user.phone
+                                )
                                 Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
                                 delay(2000)
                                 navController.navigate(route = Screens.Home.route)

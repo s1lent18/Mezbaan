@@ -5,10 +5,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import com.example.mezbaan.model.models.Data
 import com.example.mezbaan.view.Account
 import com.example.mezbaan.view.Caterers
 import com.example.mezbaan.view.Decorators
@@ -20,18 +25,22 @@ import com.example.mezbaan.view.Messages
 import com.example.mezbaan.view.Vendors
 import com.example.mezbaan.view.Venues
 import com.example.mezbaan.viewmodel.AuthViewModel
+import com.example.mezbaan.viewmodel.DecoratorViewModel
 import com.example.mezbaan.viewmodel.UserViewModel
+
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    authviewmodel: AuthViewModel = viewModel()
+    authviewmodel: AuthViewModel = viewModel(),
+    venues: List<Data>
 ) {
     val user by authviewmodel.user.observeAsState()
 
+    val decoratorviewmodel = hiltViewModel<DecoratorViewModel>()
+    val decorators by decoratorviewmodel.decorators.collectAsStateWithLifecycle()
     val userviewmodel : UserViewModel = viewModel()
     val token by userviewmodel.token.collectAsState()
-    Log.d("LoginViewModel", "token: $token")
 
     NavHost(
         navController = navController,
@@ -57,16 +66,15 @@ fun NavGraph(
 
         this.composable(
             route = Screens.Home.route
-        ) { Home(navController = navController) }
-
-        this.composable(
-            route = Screens.Venues.route
-        ) { Venues() }
+        ) { Home(
+            navController = navController,
+            venues = venues
+        ) }
 
         this.composable(
             route = Screens.Caterers.route
         ) { Caterers(
-            navController = navController
+            userviewmodel = userviewmodel
         ) }
 
         this.composable (
@@ -74,19 +82,58 @@ fun NavGraph(
         ) {
             Account(
                 navController = navController,
-                userviewmodel = userviewmodel
+                userviewmodel = userviewmodel,
             )
         }
 
         this.composable(
-            route = Screens.Decorators.route
-        ) {
-            Decorators()
+            route = Screens.Venues.route,
+            arguments = listOf(
+                navArgument("index") {
+                    type = NavType.IntType
+                    nullable = false
+                }
+            )
+        ) { backStackEntry ->
+            val venueId = backStackEntry.arguments?.getInt("index") ?: -1
+            val venue = venues.find { it.id == venueId }
+            if (venue != null) {
+                Venues(
+                    userviewmodel = userviewmodel,
+                    venue = venue
+                )
+            }
         }
 
         this.composable(
-            route = Screens.Vendors.route
-        ) { Vendors() }
+            route = Screens.Decorators.route,
+            arguments = listOf(
+                navArgument("index") {
+                    type = NavType.IntType
+                    nullable = false
+                }
+            )
+        ) { backStackEntry ->
+            val decoratorId = backStackEntry.arguments?.getInt("index") ?: -1
+            Log.d("Decorators", " Decorators $decoratorId")
+            val decorator = decorators.find { it.id == decoratorId }
+            Log.d("Decorators", " Decorators ${decorators.size}")
+            if (decorator != null) {
+                Log.d("Decorators", " Decorators ${decorator.name}")
+                Decorators(
+                    decorator = decorator
+                )
+            } else {
+                Log.d("Decorators", " No Data")
+            }
+        }
+
+        this.composable(
+            route = Screens.Vendors.route,
+        )
+        { Vendors(
+            userviewmodel = userviewmodel
+        ) }
 
         this.composable(
             route = Screens.Msg.route

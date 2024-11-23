@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id ("dagger.hilt.android.plugin")
+    id ("kotlin-parcelize")
     alias(libs.plugins.google.gms.google.services)
 }
 
@@ -67,14 +68,12 @@ dependencies {
     implementation(libs.datetime)
     implementation(libs.retrofit)
     implementation(libs.androidx.ui)
-    //implementation(libs.hilt.android)
     implementation(libs.coil.compose)
     implementation(libs.firebase.auth)
     implementation (libs.converter.gson)
     implementation(libs.androidx.core.ktx)
     implementation(libs.play.services.auth)
     implementation(libs.androidx.material3)
-    //implementation(libs.androidx.hilt.work)
     implementation(libs.facebook.android.sdk)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.accompanist.flowlayout)
@@ -105,7 +104,9 @@ dependencies {
 
     implementation (libs.hilt.android)
     ksp (libs.hilt.android.compiler)
-    //implementation (libs.androidx.hilt.lifecycle.viewmodel)
     ksp (libs.androidx.hilt.compiler)
     implementation (libs.androidx.hilt.navigation.compose)
+
+    implementation (libs.socket.io.client)
+    implementation (libs.json)
 }

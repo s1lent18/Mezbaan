@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Brightness3
 import androidx.compose.material.icons.filled.Brightness7
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.Person
@@ -68,22 +69,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
-import com.example.mezbaan.R
 import com.example.mezbaan.model.dataclasses.VenueBook
+import com.example.mezbaan.model.models.Data
 import com.example.mezbaan.model.response.NetworkResponse
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.daycolor
@@ -103,11 +101,10 @@ import kotlinx.coroutines.yield
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.math.round
 import kotlin.math.roundToInt
 
 @Composable
-fun BusinessCard(managername: String, contact: String, pic: Painter) {
+fun BusinessCard(managername: String, contact: String) {
     val context = LocalContext.current
     Row (
         modifier = Modifier.fillMaxWidth(),
@@ -118,31 +115,26 @@ fun BusinessCard(managername: String, contact: String, pic: Painter) {
             Text(
                 managername,
                 fontSize = dimens.fontsize,
-                color = secondarycolor
             )
             AddHeight(dimens.small1)
-            Text(
-                contact,
-                fontSize = dimens.buttontext,
-                color = secondarycolor,
-                modifier = Modifier.clickable {
-                    val intent = Intent(Intent.ACTION_DIAL).apply {
-                        data = Uri.parse("tel:$contact")
-                    }
-                    context.startActivity(intent)
-                }
-            )
-        }
-        Box (
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
+            Box (
                 modifier = Modifier
-                    .size(dimens.logoSize)
-                    .clip(CircleShape),
-                painter = pic,
-                contentDescription = null
-            )
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(backgroundcolor)
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "Phone Number",
+                    fontSize = dimens.buttontext,
+                    modifier = Modifier.clickable {
+                        val intent = Intent(Intent.ACTION_DIAL).apply {
+                            data = Uri.parse("tel:$contact")
+                        }
+                        context.startActivity(intent)
+                    },
+                    color = secondarycolor
+                )
+            }
         }
     }
 }
@@ -193,23 +185,16 @@ fun Cardammedity(text : String) {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
 @Composable
 fun Venues(
-    venueviewmodel: VenueViewModel = viewModel(),
-    userviewmodel: UserViewModel = viewModel()
+    venueviewmodel: VenueViewModel = hiltViewModel(),
+    userviewmodel: UserViewModel,
+    venue: Data
 ) {
-    val pics = listOf(
-        "https://drive.google.com/uc?export=view&id=1L9yTLvgUau4U_uR8Bmft89GSrIUr6y9v",
-        "https://drive.google.com/uc?export=view&id=179mOB6_5ewGP6ZiJjy7DGK9pJRg4WzA-",
-        "https://drive.google.com/uc?export=view&id=1TchRSYUcoPdNp_-MGBaFirmmKNTXhTkt"
-    )
     val stepSize = 25f
     val minValue = 50f
-    val maxValue = 1200f
-    val latitude = 24.8824115
-    val longitude = 67.0585993
-    val pagecount = pics.size
+    val maxValue = venue.capacity.toFloat()
+    val pagecount = venue.images.size
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val dateDialogState = rememberMaterialDialogState()
@@ -229,7 +214,7 @@ fun Venues(
     var isDay by rememberSaveable { mutableStateOf(false) }
     val butcolor = if (isDay) backgroundcolor else secondarycolor
     val tcolor = if (!isDay) backgroundcolor else secondarycolor
-    val price = if (!isDay) 400000 else (round((400000 / 1.5f) / 10000) * 10000).toInt()
+    val price = if (!isDay) venue.priceNight else venue.priceDay
     val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
     val currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
@@ -253,7 +238,7 @@ fun Venues(
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(venue.images.isNotEmpty()) {
         while (true) {
             yield()
             delay(3000)
@@ -293,10 +278,10 @@ fun Venues(
                 ) {
                     HorizontalPager(
                         state = pagerState,
-                        key = { pics[it] }
+                        key = { venue.images[it] }
                     ) { index ->
                         Image(
-                            painter = rememberAsyncImagePainter(pics[index]),
+                            painter = rememberAsyncImagePainter(venue.images[index]),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -308,7 +293,7 @@ fun Venues(
                             .padding(bottom = 16.dp),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        pics.forEachIndexed { pageIndex, _ ->
+                        venue.images.forEachIndexed { pageIndex, _ ->
                             val isSelected = pageIndex == pagerState.currentPage
                             Box(
                                 modifier = Modifier
@@ -317,7 +302,7 @@ fun Venues(
                                     .background(if (isSelected) Color.Black else Color.Gray)
                                     .padding(4.dp)
                             )
-                            if (pageIndex != pics.size - 1) {
+                            if (pageIndex != venue.images.size - 1) {
                                 AddWidth(8.dp)
                             }
                         }
@@ -346,7 +331,6 @@ fun Venues(
                                 Text(
                                     "Name of the venue",
                                     fontSize = dimens.fontsize,
-                                    color = secondarycolor
                                 )
 
                                 Row (
@@ -355,7 +339,7 @@ fun Venues(
                                         .background(backgroundcolor)
                                         .padding(horizontal = 8.dp, vertical = 4.dp)
                                         .clickable {
-                                            val geoUri = Uri.parse("geo:$latitude,$longitude")
+                                            val geoUri = Uri.parse("geo:${venue.locationLink}")
                                             val intent = Intent(Intent.ACTION_VIEW, geoUri)
                                             intent.setPackage("com.google.android.apps.maps")
                                             context.startActivity(intent)
@@ -379,42 +363,35 @@ fun Venues(
                                     tint = secondarycolor
                                 )
                                 AddWidth(10.dp)
-                                Text("4.5", fontSize = dimens.buttontext, color = secondarycolor)
+                                Text("4.5", fontSize = dimens.buttontext)
                             }
                         }
                         AddHeight(dimens.small1)
                         HorizontalDivider(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = secondarycolor
+                            modifier = Modifier.fillMaxWidth()
                         )
                         AddHeight(dimens.small1)
                         Text(
                             "Amenities",
-                            fontSize = dimens.fontsize,
-                            color = secondarycolor
+                            fontSize = dimens.fontsize
                         )
                         AddHeight(dimens.small1)
                         FlowRow(
                             mainAxisSpacing = 10.dp,
                             crossAxisSpacing = 10.dp,
                         ) {
-                            Cardammedity("Wi-fi")
-                            Cardammedity("Washing Machine")
-                            Cardammedity("A/C")
-                            Cardammedity("Washing Machine")
-                            Cardammedity("Washing Machine")
-                            Cardammedity("Washing Machine")
+                            venue.amenities.forEach { amenity ->
+                                Cardammedity(amenity)
+                            }
                         }
                         AddHeight(dimens.small2)
                         HorizontalDivider(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = secondarycolor
+                            modifier = Modifier.fillMaxWidth()
                         )
                         AddHeight(dimens.small2)
                         BusinessCard(
-                            managername = "Ali",
-                            contact = "+92 1345676789",
-                            pic = painterResource(R.drawable.mezbaan)
+                            managername = venue.managerName,
+                            contact = venue.managerNumber
                         )
                         AddHeight(dimens.small2)
                         HorizontalDivider(
@@ -425,9 +402,43 @@ fun Venues(
                         Column(
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Price: 400000 up to 800 Guests", color = secondarycolor)
-
-                            Text("Additional 10000 for adding 50 guests", color = secondarycolor)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(fraction = 0.7f),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Money,
+                                    contentDescription = null,
+                                    tint = secondarycolor
+                                )
+                                Text(price)
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = secondarycolor
+                                )
+                                Text("${venue.baseGuestCount}")
+                            }
+                            AddHeight(10.dp)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(fraction = 0.7f),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Money,
+                                    contentDescription = null,
+                                    tint = secondarycolor
+                                )
+                                Text("${venue.incrementPrice}")
+                                Icon(
+                                    Icons.Default.GroupAdd,
+                                    contentDescription = null,
+                                    tint = secondarycolor
+                                )
+                                Text("${venue.incrementStep}")
+                            }
                         }
                         AddHeight(dimens.small2)
                         HorizontalDivider(
@@ -519,7 +530,7 @@ fun Venues(
                             AddHeight(20.dp)
                             Funca(color = butcolor, text = "Guest count ${sliderpos.roundToInt()}", icon = Icons.Default.Person, tcolor = tcolor)
                             AddHeight(20.dp)
-                            Funca(color = butcolor, text = "Bill: ${price + ( if (sliderpos.roundToInt() > 800) 10000 * (sliderpos.roundToInt() - 800) / 50 else 0)}", icon = Icons.Default.Money, tcolor = tcolor)
+                            Funca(color = butcolor, text = "Bill: ${price.toInt() + ( if (sliderpos.roundToInt() > venue.baseGuestCount) (venue.incrementPrice?.toInt() ?: 0) * (sliderpos.roundToInt() - venue.baseGuestCount) / 50 else 0).toInt()}", icon = Icons.Default.Money, tcolor = tcolor)
                             AddHeight(10.dp)
                             Slider(
                                 value = sliderpos,

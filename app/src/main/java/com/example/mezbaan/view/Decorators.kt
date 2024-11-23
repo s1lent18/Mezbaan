@@ -55,7 +55,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -63,7 +62,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
-import com.example.mezbaan.R
+import com.example.mezbaan.model.models.DataX
 import com.example.mezbaan.ui.theme.CounterButton
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
@@ -82,7 +81,9 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Decorators() {
+fun Decorators(
+    decorator: DataX
+) {
     Surface {
         var launchhourpicker by remember { mutableStateOf(false) }
         val timeDialogState = rememberMaterialDialogState()
@@ -206,9 +207,8 @@ fun Decorators() {
                     )
                     AddHeight(dimens.small2)
                     BusinessCard(
-                        managername = "Ali",
-                        contact = "+92 1345676789",
-                        pic = painterResource(R.drawable.mezbaan)
+                        managername = decorator.managerName,
+                        contact = decorator.managerNumber
                     )
                     AddHeight(dimens.small2)
                     HorizontalDivider(

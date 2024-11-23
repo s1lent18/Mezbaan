@@ -13,6 +13,7 @@ hiltAndroid = "2.51.1"
 hiltAndroidCompiler = "2.51.1"
 hiltCompiler = "1.2.0"
 hiltLifecycleViewmodel = "1.0.0-alpha03"
+json = "20210307"
 kotlin = "1.8.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -37,6 +38,7 @@ constraintlayout = "2.1.4"
 googleGmsGoogleServices = "4.4.2"
 firebaseAuth = "23.0.0"
 runtimeLivedata = "1.7.3"
+socketIoClient = "2.0.1"
 squareupRetrofit = "2.11.0"
 #xkotlinxCoroutinesPlayServices = "1.6.4"
 retrofitVersion = "2.11.0"
@@ -69,6 +71,7 @@ datetime = { module = "io.github.vanpra.compose-material-dialogs:datetime", vers
 facebook-android-sdk = { module = "com.facebook.android:facebook-android-sdk", version.ref = "facebookAndroidSdk" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
+json = { module = "org.json:json", version.ref = "json" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -90,6 +93,7 @@ androidx-material3-window-size-android = { group = "androidx.compose.material3",
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 androidx-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "runtimeLivedata" }
+socket-io-client = { module = "io.socket:socket.io-client", version.ref = "socketIoClient" }
 #xkotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx : kotlinx-coroutines-play-services", version.ref = "xkotlinxCoroutinesPlayServices" }
 
 [plugins]

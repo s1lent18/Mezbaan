@@ -68,6 +68,8 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.navigation.NavController
 import androidx.constraintlayout.compose.Dimension
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.palette.graphics.Palette
 import coil.compose.AsyncImagePainter
@@ -75,12 +77,14 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.mezbaan.R
 import com.example.mezbaan.model.dataprovider.BookingOptions
 import com.example.mezbaan.model.dataprovider.NavigationBarItems
+import com.example.mezbaan.model.models.Data
 import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
 import com.example.mezbaan.viewmodel.AuthViewModel
+import com.example.mezbaan.viewmodel.DecoratorViewModel
 import com.example.mezbaan.viewmodel.navigation.Screens
 import com.exyte.animatednavbar.AnimatedNavigationBar
 import com.exyte.animatednavbar.animation.balltrajectory.Parabolic
@@ -213,12 +217,15 @@ fun isColorDark(color: Int): Boolean {
 @Composable
 fun Home(
     navController: NavController,
-    authviewmodel: AuthViewModel = viewModel()
+    authviewmodel: AuthViewModel = viewModel(),
+    decoratorviewmodel : DecoratorViewModel = hiltViewModel(),
+    venues: List<Data>
 ) {
     val navigationBarItems = remember { NavigationBarItems.entries }
     var selectedIndex by remember { mutableIntStateOf(0) }
     val insets = WindowInsets.navigationBars
     val bottomInsetDp = with(LocalDensity.current) { insets.getBottom(LocalDensity.current).toDp() }
+    val decorators by decoratorviewmodel.decorators.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = Modifier
@@ -453,133 +460,155 @@ fun Home(
                                 image = painterResource(BookingOptions[option].first),
                                 text = if (BookingOptions[option].second == "Photographers") "Photo\ngraphers" else BookingOptions[option].second,
                                 isSelected = selectedOption.value == BookingOptions[option].second,
-                                onclick = { selectedOption.value = BookingOptions[option].second }
+                                onclick = {
+                                    if (BookingOptions[option].second == "Decorators") {
+                                        //decoratorviewmodel.fetchDecorators()
+                                    }
+                                    selectedOption.value = BookingOptions[option].second
+                                }
                             )
                             AddWidth(dimens.scrollspacer)
                         }
                     }
 
-                    Row(
-                        modifier = Modifier
-                            .constrainAs(popularheading) {
+                    if (selectedOption.value == "Decorators" && decorators.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize().constrainAs(popularheading) {
                                 top.linkTo(itemstobook.bottom, margin = 15.dp)
-                            }
-                            .fillMaxWidth()
-                            .padding(horizontal = 18.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            "Popular " + selectedOption.value,
-                            fontSize = dimens.labeltext,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text("See All",
-                            modifier = Modifier.clickable { },
-                            color = secondarycolor,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = dimens.buttontext
-                        )
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                bottom.linkTo(parent.bottom, margin = 30.dp)
+                            },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
+                    else {
+                        Row(
+                            modifier = Modifier
+                                .constrainAs(popularheading) {
+                                    top.linkTo(itemstobook.bottom, margin = 15.dp)
+                                }
+                                .fillMaxWidth()
+                                .padding(horizontal = 18.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "Popular " + selectedOption.value,
+                                fontSize = dimens.labeltext,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text("See All",
+                                modifier = Modifier.clickable { },
+                                color = secondarycolor,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = dimens.buttontext
+                            )
+                        }
 
-                    LazyRow(
-                        modifier = Modifier.constrainAs(cards1) {
-                            top.linkTo(popularheading.bottom, margin = 15.dp)
-                        },
-                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(dimens.scrollspacer)
-                    ) {
-                        when (selectedOption.value) {
-                            "Venues" -> {
-                                item {
-                                    Cards(
-                                        model = "https://drive.google.com/uc?export=view&id=1-M2iriYaun_6875iCrDpAaRCE1ojbnpT",
-                                        text = "The Corum",
-                                        onclick = {
-                                            navController.navigate(route = Screens.Venues.route)
-                                        }
-                                    )
+                        LazyRow(
+                            modifier = Modifier.constrainAs(cards1) {
+                                top.linkTo(popularheading.bottom, margin = 15.dp)
+                            },
+                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(dimens.scrollspacer)
+                        ) {
+                            when (selectedOption.value) {
+                                "Venues" -> {
+                                    items(venues.size) {
+                                        Cards(
+                                            model = if (venues[it].images.isEmpty()) "https://shorturl.at/6DXeG" else venues[it].images[0],
+                                            text = venues[it].name,
+                                            onclick = {
+                                                navController.navigate("Venues_Screen/${venues[it].id}")
+                                            }
+                                        )
+                                        AddWidth(dimens.scrollspacer)
+                                    }
+                                }
+                                "Caterers" -> {
+                                    item {
+                                        Cards(
+                                            model = "https://drive.google.com/uc?export=view&id=1hS4R5zDqGr2aMiPY8SSzjy-1isAqUgBq",
+                                            text = "Lal Qila",
+                                            onclick = {
+                                                navController.navigate(route = Screens.Caterers.route)
+                                            }
+                                        )
+                                    }
+                                }
+                                "Decorators" -> {
+                                    items(decorators.size) {
+                                        Cards(
+                                            model = (if (decorators[it].coverImage == null) "https://shorturl.at/6DXeG" else decorators[it].coverImage).toString(),
+                                            text = decorators[it].name,
+                                            onclick = {
+                                                navController.navigate(route = "Decorators_Screen/${decorators[it].id}")
+                                            }
+                                        )
+                                    }
+                                }
+                                "Photographers" -> {
+                                    item {
+                                        Cards(
+                                            model = "https://drive.google.com/uc?export=view&id=1Gae9YMksmUfU74cgXX0x1ivwOdLb4H4L",
+                                            text = "Irfan Junejo",
+                                            onclick = {
+                                                navController.navigate(route = Screens.Vendors.route)
+                                            }
+                                        )
+                                    }
                                 }
                             }
-                            "Caterers" -> {
-                                item {
-                                    Cards(
-                                        model = "https://drive.google.com/uc?export=view&id=1hS4R5zDqGr2aMiPY8SSzjy-1isAqUgBq",
-                                        text = "Lal Qila",
-                                        onclick = {
-                                            navController.navigate(route = Screens.Caterers.route)
-                                        }
-                                    )
+                        }
+
+                        Row (
+                            modifier = Modifier
+                                .constrainAs(hotdealingheading) {
+                                    top.linkTo(cards1.bottom, margin = 75.dp)
                                 }
-                            }
-                            "Decorators" -> {
-                                item {
+                                .padding(horizontal = 18.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "Hot Deals",
+                                fontSize = dimens.labeltext,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        LazyRow (
+                            modifier = Modifier.constrainAs(card2) {
+                                top.linkTo(hotdealingheading.bottom, margin = 15.dp)
+                            },
+                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(dimens.scrollspacer)
+                        ) {
+                            if (selectedOption.value == "Venues") {
+                                items(venues.size) {
                                     Cards(
-                                        model = "https://drive.google.com/uc?export=view&id=1qzCG3vIVY9uyP-g5ZsGJFfMcP36cHuJi",
-                                        text = "Indo",
+                                        model = if (venues[it].images.isEmpty()) "https://shorturl.at/6DXeG" else venues[it].images[0],
+                                        text = venues[it].name,
                                         onclick = {
-                                            navController.navigate(route = Screens.Decorators.route)
+                                            navController.navigate("Venues_Screen/${it}")
                                         }
                                     )
-                                }
-                            }
-                            "Photographers" -> {
-                                item {
-                                    Cards(
-                                        model = "https://drive.google.com/uc?export=view&id=1Gae9YMksmUfU74cgXX0x1ivwOdLb4H4L",
-                                        text = "Irfan Junejo",
-                                        onclick = {
-                                            navController.navigate(route = Screens.Vendors.route)
-                                        }
-                                    )
+                                    AddWidth(dimens.scrollspacer)
                                 }
                             }
                         }
                     }
 
-                    Row (
-                        modifier = Modifier
-                            .constrainAs(hotdealingheading) {
-                                top.linkTo(cards1.bottom, margin = 75.dp)
-                            }
-                            .padding(horizontal = 18.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            "Hot Deals",
-                            fontSize = dimens.labeltext,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
 
-                    LazyRow (
-                        modifier = Modifier.constrainAs(card2) {
-                            top.linkTo(hotdealingheading.bottom, margin = 15.dp)
-                        },
-                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(dimens.scrollspacer)
-                    ) {
-                        if (selectedOption.value == "Venues") {
-                            item {
-                                Cards(
-                                    model = "https://drive.google.com/uc?export=view&id=1-M2iriYaun_6875iCrDpAaRCE1ojbnpT",
-                                    text = "Santorini",
-                                    onclick = {
-                                        navController.navigate(route = Screens.Venues.route)
-                                    }
-                                )
-                                AddWidth(dimens.scrollspacer)
-                                Cards(
-                                    model = "https://drive.google.com/uc?export=view&id=1-M2iriYaun_6875iCrDpAaRCE1ojbnpT",
-                                    text = "Santorini",
-                                    onclick = {
-                                        navController.navigate(route = Screens.Venues.route)
-                                    }
-                                )
-                            }
-                        }
-                    }
+
+
+
+
+
+
                 }
             }
         }

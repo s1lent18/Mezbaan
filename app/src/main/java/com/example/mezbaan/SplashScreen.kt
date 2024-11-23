@@ -3,6 +3,7 @@ package com.example.mezbaan
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
@@ -18,20 +19,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.mezbaan.model.models.Data
 import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.MezbaanTheme
 import com.example.mezbaan.ui.theme.secondarycolor
+import com.example.mezbaan.viewmodel.UserViewModel
+import com.example.mezbaan.viewmodel.VenueViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 
 @SuppressLint("CustomSplashScreen")
+@AndroidEntryPoint
 class SplashActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MezbaanTheme {
-                SplashScreen {
-                    startActivity(Intent(this@SplashActivity, MainActivity::class.java))
+                SplashScreen { venues->
+                    Log.d("SplashActivity", "Venues being passed to MainActivity: ${venues.size}, venues: $venues")
+                    val intent = Intent(this@SplashActivity, MainActivity::class.java)
+                    intent.putParcelableArrayListExtra("venues", ArrayList(venues))
+                    startActivity(intent)
                     finish()
                 }
             }
@@ -39,18 +50,38 @@ class SplashActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun SplashScreen(onSplashFinished: () -> Unit) {
-        val  text = "Mezbaan..."
+    private fun SplashScreen(onSplashFinished: (List<Data>) -> Unit) {
+
+        val venueViewModel = hiltViewModel<VenueViewModel>()
+        val venues by venueViewModel.venues.collectAsStateWithLifecycle()
+        val userviewmodel = hiltViewModel<UserViewModel>()
+        val sessionstatus by userviewmodel.session.collectAsStateWithLifecycle()
+        var isSplashComplete by remember { mutableStateOf(false) }
+
+        val  text = "Mezbaan"
         var displayedText by remember { mutableStateOf("") }
 
         LaunchedEffect (Unit) {
+            venueViewModel.fetchVenues()
+
             for (i in 1 ..text.length) {
                 displayedText = text.substring(0, i)
                 delay(100)
             }
-            delay(1500)
-            onSplashFinished()
+
+            delay(500)
+            isSplashComplete = true
         }
+
+        LaunchedEffect(isSplashComplete, venues, !sessionstatus) {
+            Log.d("Response", "API Response Venue Size: ${venues.size}, isDataLoaded : ${isSplashComplete}, sessionStatus : $sessionstatus")
+            if (isSplashComplete && venues.isNotEmpty() && !sessionstatus) {
+                Log.d("Splash Screen", "Navigating with venues: ${venues.size}")
+                onSplashFinished(venues)
+            }
+        }
+
+
 
         Box(
             modifier = Modifier.fillMaxSize(),

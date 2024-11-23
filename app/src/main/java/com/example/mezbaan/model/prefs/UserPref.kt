@@ -7,6 +7,8 @@ val USERNAME_KEY = stringPreferencesKey("username")
 val EMAIL_KEY = stringPreferencesKey("email")
 val PHONE_KEY = stringPreferencesKey("phone")
 val USER_KEY = stringPreferencesKey("token")
+val IMAGE_KEY = stringPreferencesKey("image")
+val TIMESTAMP_KEY = stringPreferencesKey("timestamp")
 
 interface UserPref {
 
@@ -14,9 +16,13 @@ interface UserPref {
     fun getUsername(): Flow<String>
     fun getEmail(): Flow<String>
     fun getPhone(): Flow<String>
+    fun getImage(): Flow<String?>
+    fun getTimeStamp(): Flow<String>
 
     suspend fun saveToken(token: String)
     suspend fun saveUsername(username: String)
     suspend fun saveEmail(email: String)
     suspend fun savePhone(phone: String)
+    suspend fun saveImage(image: String?)
+    suspend fun saveTimeStamp(timestamp: String)
 }
