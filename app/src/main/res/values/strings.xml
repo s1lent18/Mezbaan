@@ -1,7 +1,0 @@
-<resources>
-    <string name="app_name">Mezbaan</string>
-    <string name="client_id">770959712309-n7dq9vhgijhdhbcbe9s29105ookc467p.apps.googleusercontent.com</string>
-    <string name="facebook_app_id">1077413034255901</string>
-    <string name="fb_login_protocol_scheme">fb1077413034255901</string>
-    <string name="facebook_client_token">2cbf7d879b0377ca63d5e9f92c179a37</string>
-</resources>
