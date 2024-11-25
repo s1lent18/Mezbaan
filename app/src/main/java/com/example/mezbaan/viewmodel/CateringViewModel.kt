@@ -3,8 +3,8 @@ package com.example.mezbaan.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mezbaan.model.api.GetDecoratorApi
-import com.example.mezbaan.model.models.DataX
+import com.example.mezbaan.model.api.GetCateringApi
+import com.example.mezbaan.model.models.DataXX
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,25 +12,24 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class DecoratorViewModel @Inject constructor(
-    private val getdecoratorapi : GetDecoratorApi
+class CateringViewModel @Inject constructor(
+    private val getcateringapi : GetCateringApi
 ) : ViewModel() {
 
     init {
-        fetchDecorators()
+        fetchCatering()
     }
 
-    private val _decorators = MutableStateFlow<List<DataX>>(emptyList())
-    val decorators: StateFlow<List<DataX>> = _decorators
+    private val _menu = MutableStateFlow<List<DataXX>>(emptyList())
+    val menu: StateFlow<List<DataXX>> = _menu
 
-    private fun fetchDecorators(limit: Int = 20, page: Int = 1) {
+    private fun fetchCatering() {
         viewModelScope.launch {
             try {
-                val response = getdecoratorapi.getDecorators(limit, page)
+                val response = getcateringapi.getCatering()
                 if (response.isSuccessful) {
                     response.body()?.let { decoratorResponse ->
-                        _decorators.value = decoratorResponse.data
-                        Log.d("API Response", "Venues Updated: ${decoratorResponse.data.size}")
+                        _menu.value = decoratorResponse.data
                     }
                 } else {
                     Log.e("API Response", "Failed: ${response.errorBody()?.string()}")

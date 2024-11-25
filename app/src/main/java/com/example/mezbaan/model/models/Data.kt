@@ -22,5 +22,6 @@ data class Data(
     val priceNight: String,
     val priceOff: String,
     val userId: Int,
-    val venueType: String
+    val venueType: String,
+    val rating: Float
 ) : Parcelable

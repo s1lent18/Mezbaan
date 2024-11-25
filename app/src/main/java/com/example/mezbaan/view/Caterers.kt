@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -60,10 +61,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -82,30 +83,28 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.mezbaan.R
 import com.example.mezbaan.model.dataclasses.CartItems
-import com.example.mezbaan.model.dataprovider.AppetizersOption
 import com.example.mezbaan.model.dataprovider.CaterersOption
-import com.example.mezbaan.model.dataprovider.DessertsOption
-import com.example.mezbaan.model.dataprovider.DrinksOptions
-import com.example.mezbaan.model.dataprovider.MainCourseOptions
-import com.example.mezbaan.model.response.NetworkResponse
+import com.example.mezbaan.model.models.DataXX
+import com.example.mezbaan.model.models.MenuItem
 import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
 import com.example.mezbaan.viewmodel.UserViewModel
+import com.google.accompanist.flowlayout.FlowRow
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.datetime.time.TimePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
@@ -158,7 +157,37 @@ fun CartItemRow(item: CartItems, onClick: () -> Unit) {
 }
 
 @Composable
-fun Display(imageUrl: String, title: String, addtocart: () -> Unit) {
+fun PackageCard(title: String, items: List<MenuItem?>, price: Int, modifier: Modifier) {
+    Card (
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundcolor,
+            contentColor = secondarycolor
+        )
+    ) {
+        Column (
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+        ) {
+            Text(title, fontFamily = Bebas, fontSize = 22.sp)
+            AddHeight(5.dp)
+            FlowRow(
+                mainAxisSpacing = 10.dp,
+                crossAxisSpacing = 10.dp,
+            ) {
+                items.forEach { amenity ->
+                    if (amenity != null) {
+                        Text(amenity.name, fontSize = 12.sp)
+                    }
+                }
+            }
+            AddHeight(5.dp)
+            Text(price.toString(), fontFamily = Bebas, fontSize = 20.sp)
+        }
+    }
+}
+
+@Composable
+fun Display(imageUrl: String, title: String, addtocart: () -> Unit, rate: Int) {
 
     var opendialog by remember { mutableStateOf(false) }
 
@@ -189,7 +218,7 @@ fun Display(imageUrl: String, title: String, addtocart: () -> Unit) {
             DialogFood(
                 imageUrl = imageUrl,
                 title = title,
-                rate = 25,
+                rate = rate,
                 onDismissRequest = {
                     opendialog = false
                },
@@ -269,20 +298,25 @@ fun DialogFood(
 @Composable
 fun Caterers(
     userviewmodel: UserViewModel,
+    menu: DataXX
 ) {
     Surface {
         val stepSize = 50f
         val minValue = 50f
         val maxValue = 3000f
         val context = LocalContext.current
-        val email = userviewmodel.email.collectAsState()
-        val phone = userviewmodel.phone.collectAsState()
+        val listState = rememberLazyListState()
+        val coroutineScope = rememberCoroutineScope()
         val dateDialogState = rememberMaterialDialogState()
         val timeDialogState = rememberMaterialDialogState()
-        val username = userviewmodel.username.collectAsState()
         var clicked by remember { mutableStateOf(false) }
+        var expanded by remember { mutableStateOf(false) }
+        var selected by remember { mutableStateOf(false) }
         var searchQuery by remember { mutableStateOf("") }
+        val drinks = menu.menuItems.filter { it.type == "Drink" }
         var isLoading by remember { mutableStateOf(false) }
+        val token by userviewmodel.token.collectAsState()
+        val desserts = menu.menuItems.filter { it.type == "Dessert" }
         var pickedtime by remember { mutableStateOf(LocalTime.NOON) }
         var pickeddate by remember { mutableStateOf(LocalDate.now()) }
         var sliderpos by remember { mutableFloatStateOf(50.0f) }
@@ -290,31 +324,53 @@ fun Caterers(
         var requestreceived by remember { mutableStateOf(false) }
         var cartItems by remember { mutableStateOf(listOf<CartItems>()) }
         val (address, setaddress) = remember { mutableStateOf("") }
+        var isScrollingForward by remember { mutableStateOf(true) }
+        val appetizers = menu.menuItems.filter { it.type == "Appetizer" }
         var information by rememberSaveable { mutableStateOf(false) }
         var isSheetopen by rememberSaveable { mutableStateOf(false) }
-        var expanded by remember { mutableStateOf(false) }
-        var selected by remember { mutableStateOf(false) }
+        val maincourse = menu.menuItems.filter { it.type == "Main Course" }
         val selectedOption = remember { mutableStateOf("Appetizers") }
         val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        val currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        var currentIndex by remember { androidx.compose.runtime.mutableIntStateOf(0) }
         val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm").format(pickedtime) } }
         val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
 
         val filteredItems = if (searchQuery.isNotEmpty()) {
             when (selectedOption.value) {
-                "Appetizers" -> AppetizersOption.filter { it.second.contains(searchQuery, ignoreCase = true) }
-                "Main\nCourse" -> MainCourseOptions.filter { it.second.contains(searchQuery, ignoreCase = true) }
-                "Desserts" -> DessertsOption.filter { it.second.contains(searchQuery, ignoreCase = true) }
-                "Drinks" -> DrinksOptions.filter { it.second.contains(searchQuery, ignoreCase = true) }
+                "Appetizers" -> appetizers.filter { it.name.contains(searchQuery, ignoreCase = true) }
+                "Main\nCourse" -> maincourse.filter { it.name.contains(searchQuery, ignoreCase = true) }
+                "Desserts" -> desserts.filter { it.name.contains(searchQuery, ignoreCase = true) }
+                "Drinks" -> drinks.filter { it.name.contains(searchQuery, ignoreCase = true) }
                 else -> emptyList()
             }
         } else {
             when (selectedOption.value) {
-                "Appetizers" -> AppetizersOption
-                "Main\nCourse" -> MainCourseOptions
-                "Desserts" -> DessertsOption
-                "Drinks" -> DrinksOptions
+                "Appetizers" -> appetizers
+                "Main\nCourse" -> maincourse
+                "Desserts" -> desserts
+                "Drinks" -> drinks
                 else -> emptyList()
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            while (true) {
+                delay(2000)
+                coroutineScope.launch {
+                    currentIndex = if (isScrollingForward) {
+                        currentIndex + 1
+                    } else {
+                        currentIndex - 1
+                    }
+
+                    listState.animateScrollToItem(currentIndex)
+
+                    if (currentIndex == menu.packages.size - 2) {
+                        isScrollingForward = false
+                    } else if (currentIndex == 0) {
+                        isScrollingForward = true
+                    }
+                }
             }
         }
 
@@ -360,7 +416,7 @@ fun Caterers(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("Caterers Name", fontWeight = FontWeight.Bold, fontFamily = Bebas, fontSize = dimens.fontsize)
+                            Text(menu.name, fontWeight = FontWeight.Bold, fontFamily = Bebas, fontSize = dimens.fontsize)
                         }
                     }
                 }
@@ -422,12 +478,12 @@ fun Caterers(
                 Row(
                     modifier = Modifier
                         .constrainAs(expandable) {
-                        top.linkTo(boxes.bottom, margin = 10.dp)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                        width = Dimension.percent(0.9f)
-                    }
-                    .height(IntrinsicSize.Min),
+                            top.linkTo(boxes.bottom, margin = 10.dp)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                            width = Dimension.percent(0.9f)
+                        }
+                        .height(IntrinsicSize.Min),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -514,10 +570,12 @@ fun Caterers(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(30.dp).constrainAs(createRef()) {
-                    top.linkTo(expandable.bottom)
-                    start.linkTo(parent.start)
-                })
+                Spacer(modifier = Modifier
+                    .height(30.dp)
+                    .constrainAs(createRef()) {
+                        top.linkTo(expandable.bottom)
+                        start.linkTo(parent.start)
+                    })
 
                 Box(
                     modifier = Modifier.constrainAs(fooditems) {
@@ -526,7 +584,8 @@ fun Caterers(
                         end.linkTo(parent.end)
                         bottom.linkTo(checkoutbutton.top, margin = 5.dp)
                         height = Dimension.fillToConstraints
-                    }
+                    },
+                    contentAlignment = Alignment.Center
                 ) {
                     if (selected) {
                         LazyVerticalGrid(
@@ -536,16 +595,44 @@ fun Caterers(
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
                         ) {
                             items(filteredItems.size) { option ->
-                                Display(
-                                    imageUrl = filteredItems[option].first,
-                                    title = filteredItems[option].second,
-                                    addtocart = { addToCart(
-                                        CartItems(imageUrl = filteredItems[option].first,
-                                            title = filteredItems[option].second,
-                                            rate = 100
-                                        )
-                                    ) }
+                                filteredItems[option].cost?.let { it ->
+                                    Display(
+                                        imageUrl = "https://shorturl.at/6DXeG",
+                                        title = filteredItems[option].name,
+                                        rate = it,
+                                        addtocart = {
+                                            filteredItems[option].cost?.let {
+                                                CartItems(
+                                                    imageUrl = "https://shorturl.at/6DXeG",
+                                                    title = filteredItems[option].name,
+                                                    rate = it
+                                                )
+                                            }?.let {
+                                                addToCart(
+                                                    it
+                                                )
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        LazyColumn (
+                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(menu.packages.size) {
+                                PackageCard(
+                                    title = menu.packages[it].name,
+                                    items = menu.packages[it].menuItems,
+                                    price = menu.packages[it].price,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp)
                                 )
+                                AddHeight(10.dp)
                             }
                         }
                     }

@@ -22,9 +22,10 @@ import com.example.mezbaan.view.Signup
 import com.example.mezbaan.view.Home
 import com.example.mezbaan.view.Landing
 import com.example.mezbaan.view.Messages
-import com.example.mezbaan.view.Vendors
+import com.example.mezbaan.view.Photographers
 import com.example.mezbaan.view.Venues
 import com.example.mezbaan.viewmodel.AuthViewModel
+import com.example.mezbaan.viewmodel.CateringViewModel
 import com.example.mezbaan.viewmodel.DecoratorViewModel
 import com.example.mezbaan.viewmodel.UserViewModel
 
@@ -36,9 +37,10 @@ fun NavGraph(
     venues: List<Data>
 ) {
     val user by authviewmodel.user.observeAsState()
-
+    val cateringviewmodel = hiltViewModel<CateringViewModel>()
     val decoratorviewmodel = hiltViewModel<DecoratorViewModel>()
     val decorators by decoratorviewmodel.decorators.collectAsStateWithLifecycle()
+    val catering by cateringviewmodel.menu.collectAsStateWithLifecycle()
     val userviewmodel : UserViewModel = viewModel()
     val token by userviewmodel.token.collectAsState()
 
@@ -71,12 +73,6 @@ fun NavGraph(
             venues = venues
         ) }
 
-        this.composable(
-            route = Screens.Caterers.route
-        ) { Caterers(
-            userviewmodel = userviewmodel
-        ) }
-
         this.composable (
             route = Screens.Account.route
         ) {
@@ -84,6 +80,25 @@ fun NavGraph(
                 navController = navController,
                 userviewmodel = userviewmodel,
             )
+        }
+
+        this.composable(
+            route = Screens.Caterers.route,
+            arguments = listOf(
+                navArgument("index") {
+                    type = NavType.IntType
+                    nullable = false
+                }
+            )
+        ) { backStackEntry ->
+            val cateringId = backStackEntry.arguments?.getInt("index") ?: -1
+            val menu = catering.find { it.id == cateringId }
+            if (menu != null) {
+                Caterers(
+                    menu = menu,
+                    userviewmodel = userviewmodel,
+                )
+            }
         }
 
         this.composable(
@@ -100,7 +115,8 @@ fun NavGraph(
             if (venue != null) {
                 Venues(
                     userviewmodel = userviewmodel,
-                    venue = venue
+                    venue = venue,
+                    navController = navController
                 )
             }
         }
@@ -129,10 +145,11 @@ fun NavGraph(
         }
 
         this.composable(
-            route = Screens.Vendors.route,
+            route = Screens.Photographers.route,
         )
-        { Vendors(
-            userviewmodel = userviewmodel
+        { Photographers(
+            userviewmodel = userviewmodel,
+
         ) }
 
         this.composable(

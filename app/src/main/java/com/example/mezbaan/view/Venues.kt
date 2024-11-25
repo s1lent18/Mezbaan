@@ -79,6 +79,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.mezbaan.model.dataclasses.VenueBook
 import com.example.mezbaan.model.models.Data
@@ -90,6 +91,7 @@ import com.example.mezbaan.ui.theme.navyblue
 import com.example.mezbaan.ui.theme.secondarycolor
 import com.example.mezbaan.viewmodel.UserViewModel
 import com.example.mezbaan.viewmodel.VenueViewModel
+import com.example.mezbaan.viewmodel.navigation.Screens
 import com.google.accompanist.flowlayout.FlowRow
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
@@ -99,7 +101,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
@@ -143,7 +144,7 @@ fun BusinessCard(managername: String, contact: String) {
 fun Funca(
     color: Color = secondarycolor,
     text: String,
-    icon : ImageVector,
+    icon : ImageVector? = null,
     tcolor: Color = backgroundcolor,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
         .fillMaxWidth(fraction = 0.85f)
@@ -164,8 +165,10 @@ fun Funca(
                 .padding(start = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
+            if (icon != null) {
+                Icon(icon, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+            }
             Text(text)
         }
     }
@@ -189,7 +192,8 @@ fun Cardammedity(text : String) {
 fun Venues(
     venueviewmodel: VenueViewModel = hiltViewModel(),
     userviewmodel: UserViewModel,
-    venue: Data
+    venue: Data,
+    navController: NavController
 ) {
     val stepSize = 25f
     val minValue = 50f
@@ -199,40 +203,33 @@ fun Venues(
     val coroutineScope = rememberCoroutineScope()
     val dateDialogState = rememberMaterialDialogState()
     var isLoading by remember { mutableStateOf(false) }
-    var launchdialogbox by remember { mutableStateOf(false) }
+    val launchdialogbox by venueviewmodel.isDialogVisible.collectAsState()
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var pickeddate by remember { mutableStateOf(LocalDate.now()) }
     val pagerState = rememberPagerState(pageCount = { pagecount })
     var sliderpos by remember { mutableFloatStateOf(50.0f) }
     var clicked by remember { mutableStateOf(false) }
     val venuebookresult = venueviewmodel.venuebookingresult.observeAsState()
-    val username = userviewmodel.username.collectAsState()
-    val email = userviewmodel.email.collectAsState()
-    val phone = userviewmodel.phone.collectAsState()
+    val token = userviewmodel.token.collectAsState()
     var requestreceived by remember { mutableStateOf(false) }
     var isSheetopen by rememberSaveable { mutableStateOf(false) }
     var isDay by rememberSaveable { mutableStateOf(false) }
     val butcolor = if (isDay) backgroundcolor else secondarycolor
     val tcolor = if (!isDay) backgroundcolor else secondarycolor
     val price = if (!isDay) venue.priceNight else venue.priceDay
-    val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
-    val currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+    val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("yyyy-MM-dd").format(pickeddate) } }
 
     LaunchedEffect (clicked) {
         if(clicked) {
             val viewbookresults = VenueBook(
-                guestcount = sliderpos.toInt(),
-                starttime = "8.30pm",
-                endtime = "12:00am",
-                edate = formatteddate,
-                bdate = currentDateTime,
-                locationname = "Corum",
-                locationid = 1,
-                username = username.value,
-                email = email.value,
-                phone = phone.value
+                guestCount = sliderpos.toInt(),
+                startTime = if (!isDay) "20:30" else "13:30",
+                endTime = if (!isDay) "00:00" else "17:00",
+                date = formatteddate,
+                venueId = venue.id,
+                bill = price.toInt() + ( if (sliderpos.roundToInt() > venue.baseGuestCount) (venue.incrementPrice?.toInt() ?: 0) * (sliderpos.roundToInt() - venue.baseGuestCount) / 50 else 0).toInt()
             )
-            venueviewmodel.bookvenue(viewbookresults)
+            venueviewmodel.bookvenue(viewbookresults, "Bearer ${token.value}")
             clicked = false
             requestreceived = true
         }
@@ -589,7 +586,7 @@ fun Venues(
                             AddHeight(30.dp)
 
                             Button(
-                                onClick = { requestreceived = true },
+                                onClick = { clicked = true },
                                 modifier = Modifier
                                     .fillMaxWidth(fraction = 0.85f)
                                     .height(50.dp),
@@ -651,36 +648,41 @@ fun Venues(
                         pickeddate = it
                     }
                 }
+            }
 
-                if(requestreceived) {
-                    when (val request = venuebookresult.value) {
-                        is NetworkResponse.Failure -> isLoading = false
-                        NetworkResponse.Loading -> isLoading = true
-                        is NetworkResponse.Success -> {
-                            isLoading = false
-                            if (request.data.result) {
-                                isSheetopen = false
-                                launchdialogbox = true
-                            }
-                        }
-                        null -> { }
+            if(requestreceived) {
+                when (venuebookresult.value) {
+                    is NetworkResponse.Failure -> isLoading = false
+                    NetworkResponse.Loading -> isLoading = true
+                    is NetworkResponse.Success -> {
+                        isLoading = false
+                        isSheetopen = false
+                        requestreceived = false
                     }
+                    null -> { }
                 }
+            }
 
-                if(launchdialogbox) {
-                    AlertDialog(
-                        onDismissRequest = {launchdialogbox = false},
-                        confirmButton = {
-                            Button(
-                                onClick = {launchdialogbox = false}
-                            ) {
-                                Text("Close")
-                            }
-                        },
-                        title = { Text("Venue Booking") },
-                        text = { Text("your request is sent to the vendor") }
-                    )
-                }
+            if(launchdialogbox) {
+                AlertDialog(
+                    onDismissRequest = { venueviewmodel.closeDialog() },
+                    confirmButton = {
+                        Button(
+                            onClick = { navController.navigate(route = Screens.Home.route) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = backgroundcolor,
+                                contentColor = secondarycolor
+                            )
+                        ) {
+                            Text("Close")
+                        }
+                    },
+                    title = { Text("Venue Booking") },
+                    text = { Text("your request is sent to the vendor") },
+                    containerColor = backgroundcolor,
+                    textContentColor = secondarycolor,
+                    titleContentColor = secondarycolor
+                )
             }
         }
     }

@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 enum class NavigationBarItems(val text: String, val icon: ImageVector) {
     Home(text = "Home", icon = Icons.Default.Home),
-    Msg(text = "Messages", icon = Icons.AutoMirrored.Filled.Message),
+    Msg(text = "Booking", icon = Icons.AutoMirrored.Filled.Message),
     Account(text = "Account", icon = Icons.Default.AccountCircle),
     Logout(text = "Logout", icon = Icons.AutoMirrored.Filled.ArrowBack),
 }

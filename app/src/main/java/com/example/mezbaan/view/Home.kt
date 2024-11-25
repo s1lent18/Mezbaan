@@ -8,6 +8,7 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,11 +41,16 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,7 +59,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -65,6 +73,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.navigation.NavController
 import androidx.constraintlayout.compose.Dimension
@@ -72,10 +81,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.palette.graphics.Palette
+import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
-import com.example.mezbaan.R
 import com.example.mezbaan.model.dataprovider.BookingOptions
+import com.example.mezbaan.model.dataprovider.FilteredItem
 import com.example.mezbaan.model.dataprovider.NavigationBarItems
 import com.example.mezbaan.model.models.Data
 import com.example.mezbaan.ui.theme.Bebas
@@ -84,7 +94,9 @@ import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
 import com.example.mezbaan.viewmodel.AuthViewModel
+import com.example.mezbaan.viewmodel.CateringViewModel
 import com.example.mezbaan.viewmodel.DecoratorViewModel
+import com.example.mezbaan.viewmodel.PhotographerViewModel
 import com.example.mezbaan.viewmodel.navigation.Screens
 import com.exyte.animatednavbar.AnimatedNavigationBar
 import com.exyte.animatednavbar.animation.balltrajectory.Parabolic
@@ -137,6 +149,64 @@ fun Itemstobook(
         }
     }
 }
+
+@Composable
+fun DialogFilter(
+    onDismissRequest: () -> Unit,
+    selectedTabIndex: MutableState<Int>,
+    tabs: List<String>,
+    priceRange: MutableState<ClosedFloatingPointRange<Float>>,
+    minprice: Float,
+    maxprice: Float
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+    ) {
+        Column (
+            modifier = Modifier.height(250.dp).background(backgroundcolor)
+        ) {
+            ScrollableTabRow(
+                selectedTabIndex = selectedTabIndex.value,
+                edgePadding = 0.dp,
+                modifier = Modifier.padding(bottom = 16.dp),
+                containerColor = backgroundcolor,
+                contentColor = secondarycolor
+            ) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTabIndex.value == index,
+                        onClick = { selectedTabIndex.value = index },
+                        text = {
+                            Text(
+                                text = title,
+                            )
+                        }
+                    )
+                }
+            }
+
+            RangeSlider(
+                value = priceRange.value,
+                valueRange = minprice..maxprice,
+                onValueChange = { priceRange.value = it },
+                steps = 5,
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .graphicsLayer {
+                        shape = RoundedCornerShape(8.dp)
+                        clip = true
+                    },
+                colors = SliderDefaults.colors(
+                    thumbColor = Color.White,
+                    activeTrackColor = secondarycolor,
+                    inactiveTrackColor = Color(0xFF023047)
+                ),
+            )
+
+        }
+    }
+}
+
 
 @Composable
 fun Cards(
@@ -219,13 +289,102 @@ fun Home(
     navController: NavController,
     authviewmodel: AuthViewModel = viewModel(),
     decoratorviewmodel : DecoratorViewModel = hiltViewModel(),
+    cateringviewmodel : CateringViewModel = hiltViewModel(),
+    photographerviewmodel : PhotographerViewModel = hiltViewModel(),
     venues: List<Data>
 ) {
-    val navigationBarItems = remember { NavigationBarItems.entries }
-    var selectedIndex by remember { mutableIntStateOf(0) }
     val insets = WindowInsets.navigationBars
-    val bottomInsetDp = with(LocalDensity.current) { insets.getBottom(LocalDensity.current).toDp() }
+    val venuesp = venues.sortedByDescending { it.rating }
+    var searchQuery by remember { mutableStateOf("") }
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedIndex by remember { mutableIntStateOf(0) }
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    val navigationBarItems = remember { NavigationBarItems.entries }
+    val selectedOption = remember { mutableStateOf("Venues") }
+    val catering by cateringviewmodel.menu.collectAsStateWithLifecycle()
     val decorators by decoratorviewmodel.decorators.collectAsStateWithLifecycle()
+    val venuesh = venues.sortedWith(compareBy<Data> {it.priceOff}.thenBy { it.rating })
+    val photographers by photographerviewmodel.photographers.collectAsStateWithLifecycle()
+    val bottomInsetDp = with(LocalDensity.current) { insets.getBottom(LocalDensity.current).toDp() }
+
+    val tabs = listOf("Price Filter", "Tab 2", "Tab 3")
+
+    val filteredItems: List<FilteredItem> = when (selectedOption.value) {
+        "Venues" -> venues
+            .filter { it.name.contains(searchQuery, ignoreCase = true) }
+            .map { FilteredItem(
+                name = it.name,
+                id = it.id,
+                imageUrl = if (it.images.isNotEmpty()) it.images[0] else "https://shorturl.at/6DXeG"
+            )
+        }
+        "Caterers" -> catering
+            .filter { it.name.contains(searchQuery, ignoreCase = true) }
+            .map { FilteredItem(
+                name = it.name,
+                id = it.id,
+                imageUrl = if (it.images.isNotEmpty()) it.images[0] else "https://shorturl.at/6DXeG"
+            )
+        }
+        "Decorators" -> decorators
+            .filter { it.name.contains(searchQuery, ignoreCase = true) }
+            .map { FilteredItem(
+                name = it.name,
+                id = it.id,
+                imageUrl = if (it.images.isNotEmpty()) it.images[0] else "https://shorturl.at/6DXeG"
+            )
+        }
+        else -> emptyList()
+    }
+
+    val minprice by remember {
+        mutableStateOf(
+            when (selectedOption.value) {
+                "Venues" -> {
+                    venues.minByOrNull { it.priceNight }?.priceNight?.toFloat() ?: 0f
+                }
+                "Caterers" -> {
+                    catering.minByOrNull { dataXX -> dataXX.menuItems.sumOf { it.cost ?: 0 } }?.let { dataXX -> dataXX.menuItems.sumOf { it.cost
+                        ?: 0 } } ?: 0
+                }
+                "Decorators" -> {
+                    decorators.minByOrNull { dataX -> dataX.amenities.sumOf { it?.cost ?: 0 } }?.let { dataX -> dataX.amenities.sumOf { it?.cost ?: 0 } } ?: 0
+                }
+                else -> 0f
+            }
+        )
+    }
+
+    val maxprice by remember {
+        mutableStateOf(
+            when (selectedOption.value) {
+                "Venues" -> {
+                    venues.maxByOrNull { it.priceNight }?.priceNight?.toFloat() ?: 0f
+                }
+                "Caterers" -> {
+                    catering.maxByOrNull { dataXX -> dataXX.menuItems.sumOf { it.cost ?: 0 } }?.let { dataXX -> dataXX.menuItems.sumOf { it.cost
+                        ?: 0 } } ?: 0
+                }
+                "Decorators" -> {
+                    decorators.maxByOrNull { dataX -> dataX.amenities.sumOf { it?.cost ?: 0 } }?.let { dataX -> dataX.amenities.sumOf { it?.cost ?: 0 } } ?: 0
+                }
+                else -> 0f
+            }
+        )
+    }
+
+    val priceRange = remember { mutableStateOf(minprice.toFloat()..maxprice.toFloat()) }
+
+    if (showDialog) {
+        DialogFilter(
+            onDismissRequest = { showDialog = false },
+            selectedTabIndex = remember { mutableIntStateOf(selectedTabIndex) },
+            tabs = tabs,
+            priceRange = priceRange,
+            maxprice = maxprice.toFloat(),
+            minprice = minprice.toFloat()
+        )
+    }
 
     Scaffold(
         modifier = Modifier
@@ -289,18 +448,7 @@ fun Home(
             }
         }
     ) {
-        val selectedOption = remember { mutableStateOf("Venues") }
         var isSearching by remember { mutableStateOf(false) }
-        var searchQuery by remember { mutableStateOf("") }
-        val suggestions = listOf("Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape", "Honeydew")
-
-        val filteredSuggestions = remember(searchQuery) {
-            if (searchQuery.isNotEmpty()) {
-                suggestions.filter { it.contains(searchQuery, ignoreCase = true) }
-            } else {
-                emptyList()
-            }
-        }
 
         LazyColumn(
             modifier = Modifier
@@ -390,7 +538,9 @@ fun Home(
                                     ),
                                     trailingIcon = {
                                         IconButton(
-                                            onClick = {}
+                                            onClick = {
+                                                showDialog = true
+                                            }
                                         ) {
                                             Icon(
                                                 Icons.Default.FilterAlt,
@@ -400,17 +550,21 @@ fun Home(
                                     }
                                 )
 
-                                if (filteredSuggestions.isNotEmpty()) {
+                                if (filteredItems.isNotEmpty()) {
                                     LazyColumn(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(200.dp)
                                     ) {
-                                        items(filteredSuggestions.size) { suggestions ->
+                                        items(filteredItems.size) { suggestions ->
                                             AddHeight(10.dp)
                                             FloatingActionButton(
                                                 modifier = Modifier.fillMaxWidth(),
-                                                onClick = {},
+                                                onClick = {
+                                                    navController.navigate(
+                                                        route = selectedOption.value + "_Screen/${filteredItems[suggestions].id}"
+                                                    )
+                                                },
                                                 containerColor = backgroundcolor
                                             ) {
                                                 Row (
@@ -420,16 +574,16 @@ fun Home(
                                                 ) {
                                                     Column {
                                                         Text(
-                                                            text = filteredSuggestions[suggestions],
+                                                            text = filteredItems[suggestions].name,
                                                             color = secondarycolor
                                                         )
                                                         Text(
-                                                            text = "Venues",
+                                                            text = selectedOption.value,
                                                             color = secondarycolor
                                                         )
                                                     }
-                                                    Image(
-                                                        painter = painterResource(id = R.drawable.mezbaan),
+                                                    AsyncImage(
+                                                        model = filteredItems[suggestions].imageUrl,
                                                         contentDescription = null,
                                                         modifier = Modifier
                                                             .size(50.dp)
@@ -461,9 +615,6 @@ fun Home(
                                 text = if (BookingOptions[option].second == "Photographers") "Photo\ngraphers" else BookingOptions[option].second,
                                 isSelected = selectedOption.value == BookingOptions[option].second,
                                 onclick = {
-                                    if (BookingOptions[option].second == "Decorators") {
-                                        //decoratorviewmodel.fetchDecorators()
-                                    }
                                     selectedOption.value = BookingOptions[option].second
                                 }
                             )
@@ -517,24 +668,24 @@ fun Home(
                         ) {
                             when (selectedOption.value) {
                                 "Venues" -> {
-                                    items(venues.size) {
+                                    items(venuesp.size) {
                                         Cards(
-                                            model = if (venues[it].images.isEmpty()) "https://shorturl.at/6DXeG" else venues[it].images[0],
-                                            text = venues[it].name,
+                                            model = if (venuesp[it].images.isEmpty()) "https://shorturl.at/6DXeG" else venuesp[it].images[0],
+                                            text = venuesp[it].name,
                                             onclick = {
-                                                navController.navigate("Venues_Screen/${venues[it].id}")
+                                                navController.navigate("Venues_Screen/${venuesp[it].id}")
                                             }
                                         )
                                         AddWidth(dimens.scrollspacer)
                                     }
                                 }
                                 "Caterers" -> {
-                                    item {
+                                    items(catering.size) {
                                         Cards(
-                                            model = "https://drive.google.com/uc?export=view&id=1hS4R5zDqGr2aMiPY8SSzjy-1isAqUgBq",
-                                            text = "Lal Qila",
+                                            model = "https://shorturl.at/6DXeG",
+                                            text = catering[it].name,
                                             onclick = {
-                                                navController.navigate(route = Screens.Caterers.route)
+                                                navController.navigate(route = "Caterers_Screen/${catering[it].id}")
                                             }
                                         )
                                     }
@@ -542,7 +693,7 @@ fun Home(
                                 "Decorators" -> {
                                     items(decorators.size) {
                                         Cards(
-                                            model = (if (decorators[it].coverImage == null) "https://shorturl.at/6DXeG" else decorators[it].coverImage).toString(),
+                                            model = (if (decorators[it].images.isEmpty()) "https://shorturl.at/6DXeG" else decorators[it].images[0]),
                                             text = decorators[it].name,
                                             onclick = {
                                                 navController.navigate(route = "Decorators_Screen/${decorators[it].id}")
@@ -551,12 +702,12 @@ fun Home(
                                     }
                                 }
                                 "Photographers" -> {
-                                    item {
+                                    items (photographers.size) {
                                         Cards(
                                             model = "https://drive.google.com/uc?export=view&id=1Gae9YMksmUfU74cgXX0x1ivwOdLb4H4L",
                                             text = "Irfan Junejo",
                                             onclick = {
-                                                navController.navigate(route = Screens.Vendors.route)
+                                                //navController.navigate(route = "Photographers_Screen/${photographers[it].id}")
                                             }
                                         )
                                     }
@@ -587,28 +738,44 @@ fun Home(
                             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(dimens.scrollspacer)
                         ) {
-                            if (selectedOption.value == "Venues") {
-                                items(venues.size) {
-                                    Cards(
-                                        model = if (venues[it].images.isEmpty()) "https://shorturl.at/6DXeG" else venues[it].images[0],
-                                        text = venues[it].name,
-                                        onclick = {
-                                            navController.navigate("Venues_Screen/${it}")
-                                        }
-                                    )
-                                    AddWidth(dimens.scrollspacer)
+                            when (selectedOption.value) {
+                                "Venues" -> {
+                                    items(venuesh.size) {
+                                        Cards(
+                                            model = if (venuesh[it].images.isEmpty()) "https://shorturl.at/6DXeG" else venuesh[it].images[0],
+                                            text = venuesh[it].name,
+                                            onclick = {
+                                                navController.navigate("Venues_Screen/${it}")
+                                            }
+                                        )
+                                        AddWidth(dimens.scrollspacer)
+                                    }
+                                }
+                                "Catering" -> {
+                                    items(catering.size) {
+                                        Cards(
+                                            model = "https://shorturl.at/6DXeG",
+                                            text = catering[it].name,
+                                            onclick = {
+                                                navController.navigate(route = "Caterers_Screen/${catering[it].id}")
+                                            }
+                                        )
+                                    }
+                                }
+                                "Decorators" -> {
+                                    items(decorators.size) {
+                                        Cards(
+                                            model = (if (decorators[it].images.isEmpty()) "https://shorturl.at/6DXeG" else decorators[it].images[0]),
+                                            text = decorators[it].name,
+                                            onclick = {
+                                                navController.navigate(route = "Decorators_Screen/${decorators[it].id}")
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
-
-
-
-
-
-
-
-
                 }
             }
         }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,18 +14,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.AccountBalance
-import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Money
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -85,20 +83,21 @@ fun Decorators(
     decorator: DataX
 ) {
     Surface {
-        var launchhourpicker by remember { mutableStateOf(false) }
-        val timeDialogState = rememberMaterialDialogState()
-        var pickedtime by remember { mutableStateOf(LocalTime.NOON) }
-        val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm a").format(pickedtime) } }
-        var pickeddate by remember { mutableStateOf(LocalDate.now()) }
-        val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
-        val dateDialogState = rememberMaterialDialogState()
-        var isSheetopen by remember { mutableStateOf(false) }
-        val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        var sliderpos by remember { mutableFloatStateOf(0f) }
-        val valueCounter = remember { mutableStateListOf(0, 0, 0, 0, 0) }
         val stepSize = 1f
         val minValue = 1f
         val maxValue = 24f
+        val listState = rememberLazyListState()
+        val dateDialogState = rememberMaterialDialogState()
+        val timeDialogState = rememberMaterialDialogState()
+        var isSheetopen by remember { mutableStateOf(false) }
+        var sliderpos by remember { mutableFloatStateOf(0f) }
+        var pickedtime by remember { mutableStateOf(LocalTime.NOON) }
+        var pickeddate by remember { mutableStateOf(LocalDate.now()) }
+        var launchhourpicker by remember { mutableStateOf(false) }
+        val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        val valueCounter = remember { mutableStateListOf(*Array(decorator.amenities.size) { 0 }) }
+        val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm a").format(pickedtime) } }
+        val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
 
         Column (
             modifier = Modifier
@@ -123,7 +122,7 @@ fun Decorators(
                             end.linkTo(parent.end)
                         }
                 ) {
-                    val painter = rememberAsyncImagePainter(model = "https://drive.google.com/uc?export=view&id=1qzCG3vIVY9uyP-g5ZsGJFfMcP36cHuJi")
+                    val painter = rememberAsyncImagePainter(model = decorator.images[0])
                     val imageState = painter.state
                     Image(
                         painter = painter,
@@ -157,7 +156,7 @@ fun Decorators(
                 ) {
                     Column {
                         Text(
-                            "Name of the Decorators",
+                            decorator.name,
                             fontSize = dimens.fontsize,
                             color = secondarycolor
                         )
@@ -189,16 +188,29 @@ fun Decorators(
                         fontSize = dimens.fontsize,
                         color = secondarycolor
                     )
-                    AddHeight(dimens.small1)
                     FlowRow(
                         mainAxisSpacing = 10.dp,
                         crossAxisSpacing = 10.dp,
                     ) {
-                        Cardammedity("Tents")
-                        Cardammedity("Fans")
-                        Cardammedity("A/C")
-                        Cardammedity("Cutlery")
-                        Cardammedity("Waiters")
+                        decorator.amenities.forEach { amenity ->
+                            if (amenity != null) {
+                                Cardammedity(amenity.amenity)
+                            }
+                        }
+                    }
+                    LazyRow(
+                        state = listState,
+                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
+                    ) {
+                        items(decorator.images.size) { index ->
+                            MediaRep(
+                                image = decorator.images[index],
+                                onclick = {}
+                            )
+                            if (index < decorator.images.size - 1) {
+                                AddWidth(dimens.scrollspacer)
+                            }
+                        }
                     }
                     AddHeight(dimens.small2)
                     HorizontalDivider(
@@ -223,7 +235,6 @@ fun Decorators(
                         .fillMaxWidth()
                         .height(50.dp)
                         .constrainAs(confirmbutton) {
-                            //top.linkTo(bottomcolumn.bottom, margin = 20.dp)
                             start.linkTo(parent.start)
                             end.linkTo(parent.end)
                             width = Dimension.percent(0.9f)
@@ -257,138 +268,45 @@ fun Decorators(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Top
                     ) {
-                        Row (
-                            modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Funca(
-                                text = "Tents",
-                                icon = Icons.Default.AccountBalance,
-                                modifier = Modifier.fillMaxWidth(fraction = 0.5f).height(50.dp)
-                            )
-                            CounterButton(
-                                value = valueCounter[0].toString(),
-                                onValueIncreaseClick = {
-                                    valueCounter[0] += 1
-                                },
-                                onValueDecreaseClick = {
-                                    valueCounter[0] = maxOf(valueCounter[0] - 1, 0)
-                                },
-                                onValueClearClick = {
-                                    valueCounter[0] = 0
+
+                        decorator.amenities.forEachIndexed { index, amenity ->
+                            if (amenity != null) {
+                                Row (
+                                    modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Funca(
+                                        text = amenity.amenity,
+                                        modifier = Modifier.fillMaxWidth(fraction = 0.5f).height(50.dp)
+                                    )
+                                    CounterButton(
+                                        value = valueCounter[index].toString(),
+                                        onValueIncreaseClick = {
+                                            valueCounter[index] += 1
+                                        },
+                                        onValueDecreaseClick = {
+                                            valueCounter[index] = maxOf(valueCounter[0] - 1, 0)
+                                        },
+                                        onValueClearClick = {
+                                            valueCounter[index] = 0
+                                        }
+                                    )
+                                    AddWidth(20.dp)
                                 }
-                            )
-                            AddWidth(20.dp)
+                                AddHeight(20.dp)
+                            }
                         }
-                        AddHeight(20.dp)
-                        Row (
-                            modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Funca(
-                                text = "Cutlery",
-                                icon = Icons.Default.Restaurant,
-                                modifier = Modifier.fillMaxWidth(fraction = 0.5f).height(50.dp)
-                            )
-                            CounterButton(
-                                value = valueCounter[1].toString(),
-                                onValueIncreaseClick = {
-                                    valueCounter[1] += 1
-                                },
-                                onValueDecreaseClick = {
-                                    valueCounter[1] = maxOf(valueCounter[1] - 1, 0)
-                                },
-                                onValueClearClick = {
-                                    valueCounter[1] = 0
-                                }
-                            )
-                            AddWidth(20.dp)
-                        }
-                        AddHeight(20.dp)
-                        Row (
-                            modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Funca(
-                                text = "Fans",
-                                icon = Icons.Default.Air,
-                                modifier = Modifier.fillMaxWidth(fraction = 0.5f).height(50.dp)
-                            )
-                            CounterButton(
-                                value = valueCounter[2].toString(),
-                                onValueIncreaseClick = {
-                                    valueCounter[2] += 1
-                                },
-                                onValueDecreaseClick = {
-                                    valueCounter[2] = maxOf(valueCounter[2] - 1, 0)
-                                },
-                                onValueClearClick = {
-                                    valueCounter[2] = 0
-                                }
-                            )
-                            AddWidth(20.dp)
-                        }
-                        AddHeight(20.dp)
-                        Row (
-                            modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Funca(
-                                text = "A/C",
-                                icon = Icons.Default.AcUnit,
-                                modifier = Modifier.fillMaxWidth(fraction = 0.5f).height(50.dp)
-                            )
-                            CounterButton(
-                                value = valueCounter[3].toString(),
-                                onValueIncreaseClick = {
-                                    valueCounter[3] += 1
-                                },
-                                onValueDecreaseClick = {
-                                    valueCounter[3] = maxOf(valueCounter[3] - 1, 0)
-                                },
-                                onValueClearClick = {
-                                    valueCounter[3] = 0
-                                }
-                            )
-                            AddWidth(20.dp)
-                        }
-                        AddHeight(20.dp)
-                        Row (
-                            modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Funca(
-                                text = "Waiters",
-                                icon = Icons.Default.Person,
-                                modifier = Modifier.fillMaxWidth(fraction = 0.5f).height(50.dp)
-                            )
-                            CounterButton(
-                                value = valueCounter[4].toString(),
-                                onValueIncreaseClick = {
-                                    valueCounter[4] += 1
-                                },
-                                onValueDecreaseClick = {
-                                    valueCounter[4] = maxOf(valueCounter[4] - 1, 0)
-                                },
-                                onValueClearClick = {
-                                    valueCounter[4] = 0
-                                }
-                            )
-                            AddWidth(20.dp)
-                        }
-                        AddHeight(20.dp)
+
                         Funca(
                             text = "Bill: ${(
-                                     1000 * valueCounter[0]) + 
-                                     120 * (valueCounter[1]) + 
-                                     500 * (valueCounter[2]) +
-                                     1500 * (valueCounter[3]) + 
-                                     2500 * (valueCounter[4])
+                                decorator.amenities
+                                    .filterNotNull()
+                                    .mapIndexed { index, amenity ->
+                                        amenity.cost * valueCounter[index]
+                                    }
+                                    .sum()
+                                )
                             }",
                             icon = Icons.Default.Money
                         )

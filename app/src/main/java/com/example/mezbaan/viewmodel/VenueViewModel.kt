@@ -1,16 +1,16 @@
 package com.example.mezbaan.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mezbaan.model.api.BookVenueApi
 import com.example.mezbaan.model.api.GetVenueApi
-import com.example.mezbaan.model.api.RetrofitInstance
 import com.example.mezbaan.model.dataclasses.VenueBook
 import com.example.mezbaan.model.models.Data
-import com.example.mezbaan.model.models.VenueModel
-import com.example.mezbaan.model.models.VenueReqHandle
+import com.example.mezbaan.model.requests.VenueReq
 import com.example.mezbaan.model.response.NetworkResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,37 +18,44 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
+import androidx.compose.runtime.State
 
 @HiltViewModel
 class VenueViewModel @Inject constructor(
-    private val getvenueapi: GetVenueApi
+    private val getvenueapi: GetVenueApi,
+    private val getbookingvenueapi: BookVenueApi
 ) : ViewModel() {
 
-    private val venueapi = RetrofitInstance.venueapi
-    private val _venuebookingresult = MutableLiveData<NetworkResponse<VenueReqHandle>>()
-    val venuebookingresult: LiveData<NetworkResponse<VenueReqHandle>> = _venuebookingresult
+    private val _venuebookingresult = MutableLiveData<NetworkResponse<VenueReq>>()
+    val venuebookingresult: LiveData<NetworkResponse<VenueReq>> = _venuebookingresult
 
     private val _venues = MutableStateFlow<List<Data>>(emptyList())
     val venues: StateFlow<List<Data>> = _venues
 
-    fun bookvenue(venuebook: VenueBook) {
-        _venuebookingresult.value = NetworkResponse.Loading
+    private val _isDialogVisible = MutableStateFlow<Boolean>(false)
+    val isDialogVisible: StateFlow<Boolean> = _isDialogVisible
 
+    fun bookvenue(venuebook: VenueBook, token: String) {
+        Log.d("Booking", "Venues Updated: $token, ${venuebook.venueId}, ${venuebook.date}, ${venuebook.endTime}, ${venuebook.startTime}. ${venuebook.guestCount}, ${venuebook.bill}")
+        _venuebookingresult.postValue(NetworkResponse.Loading)
         viewModelScope.launch {
             try {
-                val response = venueapi.venueBooking(venuebook)
                 withTimeout(15_000) {
-                    _venuebookingresult.value = NetworkResponse.Failure("Request Failed")
-                }
-                if (response.isSuccessful) {
-                    response.body()?.let {
-                        _venuebookingresult.value = NetworkResponse.Success(it)
+                    val response = getbookingvenueapi.venueBooking(token = token, venuereq = venuebook)
+                    Log.d("Booking", "${response.code()}")
+                    if (response.isSuccessful) {
+                        response.body()?.let {
+                            _venuebookingresult.postValue(NetworkResponse.Success(it))
+                            _isDialogVisible.value = true
+                            Log.d("Booking", "Venues Updated: done")
+                        }
+                    } else {
+                        _venuebookingresult.postValue(NetworkResponse.Failure("Request Failed"))
+                        Log.d("Booking", "Venues Updated: failed")
                     }
-                } else {
-                    _venuebookingresult.value = NetworkResponse.Failure("Request Failed")
                 }
             } catch (e: Exception) {
-                _venuebookingresult.value = NetworkResponse.Failure("Request Failed")
+                _venuebookingresult.postValue(NetworkResponse.Failure("Request Failed: ${e.message}"))
             }
         }
     }
@@ -69,5 +76,9 @@ class VenueViewModel @Inject constructor(
                 Log.e("API Error", "Exception: ${e.message}")
             }
         }
+    }
+
+    fun closeDialog() {
+        _isDialogVisible.value = false
     }
 }

@@ -62,7 +62,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -77,23 +76,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.mezbaan.R
-import com.example.mezbaan.model.dataclasses.PhotographerBook
-import com.example.mezbaan.model.response.NetworkResponse
+import com.example.mezbaan.model.models.temp1
 import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.alterblack
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
-import com.example.mezbaan.viewmodel.PhotographerViewModel
 import com.example.mezbaan.viewmodel.UserViewModel
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
@@ -140,9 +135,9 @@ fun MediaRep(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Vendors(
+fun Photographers(
     userviewmodel : UserViewModel,
-    photographerviewmodel : PhotographerViewModel = viewModel()
+    //photographer : temp1
 ) {
     Surface {
         val stepSize = 1f
@@ -175,7 +170,6 @@ fun Vendors(
         var information by rememberSaveable { mutableStateOf(false) }
         var isSheetopen by rememberSaveable { mutableStateOf(false) }
         val butcolor = if (selected.value) secondarycolor else Color.White
-        val photographerbookresult = photographerviewmodel.photographerbookingresult.observeAsState()
         val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         var sliderpos by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
         var currentIndex by remember { androidx.compose.runtime.mutableIntStateOf(0) }
@@ -201,26 +195,6 @@ fun Vendors(
                         isScrollingForward = true
                     }
                 }
-            }
-        }
-
-        LaunchedEffect (clicked) {
-            if(clicked) {
-                val photographerbookresults = PhotographerBook(
-                    time = formattedtime,
-                    edate = formatteddate,
-                    bdate = currentDateTime,
-                    username = username.value,
-                    email = email.value,
-                    phone = phone.value,
-                    address = address,
-                    bill = (25000 * sliderpos.toInt()),
-                    eventtype = selectedoption,
-                    hours = sliderpos.toInt(),
-                )
-                photographerviewmodel.bookphotographer(photographerbookresults)
-                clicked = false
-                requestreceived = true
             }
         }
 
@@ -908,20 +882,6 @@ fun Vendors(
                         )
                     }
 
-                    if(requestreceived) {
-                        when (val request = photographerbookresult.value) {
-                            is NetworkResponse.Failure -> isLoading = false
-                            NetworkResponse.Loading -> isLoading = true
-                            is NetworkResponse.Success -> {
-                                isLoading = false
-                                if (request.data.result) {
-                                    isSheetopen = false
-                                    launchdialogbox = true
-                                }
-                            }
-                            null -> { }
-                        }
-                    }
 
                     if(launchdialogbox) {
                         AlertDialog(

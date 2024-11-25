@@ -1,5 +1,6 @@
 package com.example.mezbaan.model.requests
 
 data class VenueReq(
-    val amount: Int
+    val message: String,
+    val bookingId: Int
 )
