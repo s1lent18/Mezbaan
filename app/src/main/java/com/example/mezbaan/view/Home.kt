@@ -8,7 +8,6 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -59,7 +58,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
@@ -96,6 +94,7 @@ import com.example.mezbaan.ui.theme.secondarycolor
 import com.example.mezbaan.viewmodel.AuthViewModel
 import com.example.mezbaan.viewmodel.CateringViewModel
 import com.example.mezbaan.viewmodel.DecoratorViewModel
+import com.example.mezbaan.viewmodel.OtherServicesViewModel
 import com.example.mezbaan.viewmodel.PhotographerViewModel
 import com.example.mezbaan.viewmodel.navigation.Screens
 import com.exyte.animatednavbar.AnimatedNavigationBar
@@ -286,23 +285,25 @@ fun isColorDark(color: Int): Boolean {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun Home(
+    venues: List<Data>,
     navController: NavController,
     authviewmodel: AuthViewModel = viewModel(),
-    decoratorviewmodel : DecoratorViewModel = hiltViewModel(),
     cateringviewmodel : CateringViewModel = hiltViewModel(),
+    decoratorviewmodel : DecoratorViewModel = hiltViewModel(),
     photographerviewmodel : PhotographerViewModel = hiltViewModel(),
-    venues: List<Data>
+    otherservicesviewmodel : OtherServicesViewModel = hiltViewModel(),
 ) {
     val insets = WindowInsets.navigationBars
     val venuesp = venues.sortedByDescending { it.rating }
     var searchQuery by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
     var selectedIndex by remember { mutableIntStateOf(0) }
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    val selectedTabIndex by remember { mutableIntStateOf(0) }
     val navigationBarItems = remember { NavigationBarItems.entries }
     val selectedOption = remember { mutableStateOf("Venues") }
     val catering by cateringviewmodel.menu.collectAsStateWithLifecycle()
     val decorators by decoratorviewmodel.decorators.collectAsStateWithLifecycle()
+    val vendors by otherservicesviewmodel.vendors.collectAsStateWithLifecycle()
     val venuesh = venues.sortedWith(compareBy<Data> {it.priceOff}.thenBy { it.rating })
     val photographers by photographerviewmodel.photographers.collectAsStateWithLifecycle()
     val bottomInsetDp = with(LocalDensity.current) { insets.getBottom(LocalDensity.current).toDp() }
@@ -334,6 +335,22 @@ fun Home(
                 imageUrl = if (it.images.isNotEmpty()) it.images[0] else "https://shorturl.at/6DXeG"
             )
         }
+        "Photographers" -> photographers
+            .filter { it.name.contains(searchQuery, ignoreCase = true) }
+            .map { FilteredItem(
+                name = it.name,
+                id = it.id,
+                imageUrl = if (it.images.isNotEmpty()) it.images[0] else "https://shorturl.at/6DXeG"
+            )
+        }
+        "OtherServices" -> vendors
+            .filter { it.name.contains(searchQuery, ignoreCase = true) }
+            .map { FilteredItem(
+                name = it.name,
+                id = it.id,
+                imageUrl = (if (it.images.isNotEmpty()) it.images[0] else "https://shorturl.at/6DXeG").toString()
+            )
+            }
         else -> emptyList()
     }
 
@@ -349,6 +366,12 @@ fun Home(
                 }
                 "Decorators" -> {
                     decorators.minByOrNull { dataX -> dataX.amenities.sumOf { it?.cost ?: 0 } }?.let { dataX -> dataX.amenities.sumOf { it?.cost ?: 0 } } ?: 0
+                }
+                "Photographers" -> {
+                    photographers.minByOrNull { it.cost }?.cost?.toFloat() ?: 0f
+                }
+                "OtherServices" -> {
+                    vendors.minByOrNull { it.cost }?.cost?.toFloat() ?: 0f
                 }
                 else -> 0f
             }
@@ -367,6 +390,12 @@ fun Home(
                 }
                 "Decorators" -> {
                     decorators.maxByOrNull { dataX -> dataX.amenities.sumOf { it?.cost ?: 0 } }?.let { dataX -> dataX.amenities.sumOf { it?.cost ?: 0 } } ?: 0
+                }
+                "Photographers" -> {
+                    photographers.maxByOrNull { it.cost }?.cost?.toFloat() ?: 0f
+                }
+                "OtherServices" -> {
+                    vendors.maxByOrNull { it.cost }?.cost?.toFloat() ?: 0f
                 }
                 else -> 0f
             }
@@ -612,7 +641,7 @@ fun Home(
                         items(BookingOptions.size) { option ->
                             Itemstobook(
                                 image = painterResource(BookingOptions[option].first),
-                                text = if (BookingOptions[option].second == "Photographers") "Photo\ngraphers" else BookingOptions[option].second,
+                                text = if (BookingOptions[option].second == "Photographers") "Photo\ngraphers" else if (BookingOptions[option].second == "OtherServices") "Other\nServices" else BookingOptions[option].second,
                                 isSelected = selectedOption.value == BookingOptions[option].second,
                                 onclick = {
                                     selectedOption.value = BookingOptions[option].second
@@ -704,10 +733,21 @@ fun Home(
                                 "Photographers" -> {
                                     items (photographers.size) {
                                         Cards(
-                                            model = "https://drive.google.com/uc?export=view&id=1Gae9YMksmUfU74cgXX0x1ivwOdLb4H4L",
-                                            text = "Irfan Junejo",
+                                            model = (if (photographers[it].images.isEmpty()) "https://shorturl.at/6DXeG" else photographers[it].images[0]),
+                                            text = photographers[it].name,
                                             onclick = {
-                                                //navController.navigate(route = "Photographers_Screen/${photographers[it].id}")
+                                                navController.navigate(route = "Photographers_Screen/${photographers[it].id}")
+                                            }
+                                        )
+                                    }
+                                }
+                                "OtherServices" -> {
+                                    items (vendors.size) {
+                                        Cards(
+                                            model = ((if (vendors[it].images.isEmpty()) "https://shorturl.at/6DXeG" else vendors[it].images[0]).toString()),
+                                            text = vendors[it].name,
+                                            onclick = {
+                                                navController.navigate(route = "OtherServices_Screen/${vendors[it].id}")
                                             }
                                         )
                                     }
@@ -769,6 +809,29 @@ fun Home(
                                             text = decorators[it].name,
                                             onclick = {
                                                 navController.navigate(route = "Decorators_Screen/${decorators[it].id}")
+                                            }
+                                        )
+                                    }
+                                }
+                                "Photographers" -> {
+                                    items (photographers.size) {
+                                        Cards(
+                                            model = (if (photographers[it].images.isEmpty()) "https://shorturl.at/6DXeG" else photographers[it].images[0]),
+                                            text = photographers[it].name,
+                                            onclick = {
+
+                                                navController.navigate(route = "Photographers_Screen/${photographers[it].id}")
+                                            }
+                                        )
+                                    }
+                                }
+                                "OtherServices" -> {
+                                    items (vendors.size) {
+                                        Cards(
+                                            model = ((if (vendors[it].images.isEmpty()) "https://shorturl.at/6DXeG" else vendors[it].images[0]).toString()),
+                                            text = vendors[it].name,
+                                            onclick = {
+                                                navController.navigate(route = "OtherServices_Screen/${vendors[it].id}")
                                             }
                                         )
                                     }

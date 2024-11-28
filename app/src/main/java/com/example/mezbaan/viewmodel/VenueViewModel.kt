@@ -1,7 +1,6 @@
 package com.example.mezbaan.viewmodel
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -10,7 +9,7 @@ import com.example.mezbaan.model.api.BookVenueApi
 import com.example.mezbaan.model.api.GetVenueApi
 import com.example.mezbaan.model.dataclasses.VenueBook
 import com.example.mezbaan.model.models.Data
-import com.example.mezbaan.model.requests.VenueReq
+import com.example.mezbaan.model.requests.BookingReq
 import com.example.mezbaan.model.response.NetworkResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
-import androidx.compose.runtime.State
 
 @HiltViewModel
 class VenueViewModel @Inject constructor(
@@ -26,13 +24,13 @@ class VenueViewModel @Inject constructor(
     private val getbookingvenueapi: BookVenueApi
 ) : ViewModel() {
 
-    private val _venuebookingresult = MutableLiveData<NetworkResponse<VenueReq>>()
-    val venuebookingresult: LiveData<NetworkResponse<VenueReq>> = _venuebookingresult
+    private val _venuebookingresult = MutableLiveData<NetworkResponse<BookingReq>>()
+    val venuebookingresult: LiveData<NetworkResponse<BookingReq>> = _venuebookingresult
 
     private val _venues = MutableStateFlow<List<Data>>(emptyList())
     val venues: StateFlow<List<Data>> = _venues
 
-    private val _isDialogVisible = MutableStateFlow<Boolean>(false)
+    private val _isDialogVisible = MutableStateFlow(false)
     val isDialogVisible: StateFlow<Boolean> = _isDialogVisible
 
     fun bookvenue(venuebook: VenueBook, token: String) {

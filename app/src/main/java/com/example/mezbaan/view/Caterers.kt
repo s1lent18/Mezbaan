@@ -61,7 +61,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -83,18 +85,23 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.mezbaan.R
-import com.example.mezbaan.model.dataclasses.CartItems
+import com.example.mezbaan.model.dataclasses.CateringBook
 import com.example.mezbaan.model.dataprovider.CaterersOption
 import com.example.mezbaan.model.models.DataXX
 import com.example.mezbaan.model.models.MenuItem
+import com.example.mezbaan.model.models.Package
+import com.example.mezbaan.model.response.NetworkResponse
 import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
+import com.example.mezbaan.viewmodel.CateringViewModel
 import com.example.mezbaan.viewmodel.UserViewModel
+import com.example.mezbaan.viewmodel.navigation.Screens
 import com.google.accompanist.flowlayout.FlowRow
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
@@ -110,31 +117,18 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
 @Composable
-fun CartItemRow(item: CartItems, onClick: () -> Unit) {
+fun CartPackageRow(item: Package, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Card(
-            modifier = Modifier.size(60.dp),
-            shape = RoundedCornerShape(8.dp),
-            elevation = CardDefaults.cardElevation(4.dp)
-        ) {
-            AsyncImage(
-                model = item.imageUrl,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-        }
-
         AddWidth(15.dp)
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = item.title, fontFamily = Bebas, color = secondarycolor)
-            Text("${item.rate}rs per head", fontFamily = Bebas, color = secondarycolor)
+            Text(text = item.name, fontFamily = Bebas, color = secondarycolor)
+            Text("${item.price}rs per head", fontFamily = Bebas, color = secondarycolor)
         }
 
         Box(
@@ -153,13 +147,68 @@ fun CartItemRow(item: CartItems, onClick: () -> Unit) {
             }
         }
     }
-
 }
 
 @Composable
-fun PackageCard(title: String, items: List<MenuItem?>, price: Int, modifier: Modifier) {
+fun CartItemRow(item: MenuItem, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Card(
+            modifier = Modifier.size(60.dp),
+            shape = RoundedCornerShape(8.dp),
+            elevation = CardDefaults.cardElevation(4.dp)
+        ) {
+            AsyncImage(
+                model = "https://shorturl.at/6DXeG",
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
+
+        AddWidth(15.dp)
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = item.name, fontFamily = Bebas, color = secondarycolor)
+            Text("${item.cost}rs per head", fontFamily = Bebas, color = secondarycolor)
+        }
+
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(secondarycolor)
+        ) {
+            IconButton(
+                onClick = onClick
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = backgroundcolor
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun PackageCard(
+    title: String,
+    items: List<MenuItem?>,
+    price: Int,
+    addtopackagecart: () -> Unit,
+) {
+    var opendialog by remember { mutableStateOf(false) }
+
     Card (
-        modifier = modifier,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .clickable { opendialog = true },
         colors = CardDefaults.cardColors(
             containerColor = backgroundcolor,
             contentColor = secondarycolor
@@ -184,10 +233,58 @@ fun PackageCard(title: String, items: List<MenuItem?>, price: Int, modifier: Mod
             Text(price.toString(), fontFamily = Bebas, fontSize = 20.sp)
         }
     }
+
+    if(opendialog) {
+        DialogPackage(
+            title = title,
+            onDismissRequest = {
+                opendialog = false
+            },
+            onAddtoCart = addtopackagecart
+        )
+    }
 }
 
 @Composable
-fun Display(imageUrl: String, title: String, addtocart: () -> Unit, rate: Int) {
+fun DialogPackage(
+    title: String,
+    onDismissRequest: () -> Unit,
+    onAddtoCart: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        text = {
+            Text("Add $title to Cart?")
+        },
+        confirmButton = {
+            IconButton(onClick = {
+                onAddtoCart()
+                onDismissRequest()
+            }) {
+                Icon(
+                    imageVector = Icons.Default.AddShoppingCart,
+                    contentDescription = "Add to Cart",
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text("Close")
+            }
+        },
+        containerColor = backgroundcolor,
+        textContentColor = secondarycolor,
+        titleContentColor = secondarycolor
+    )
+}
+
+@Composable
+fun Display(
+    imageUrl: String,
+    title: String,
+    addtocart: () -> Unit,
+    rate: Int
+) {
 
     var opendialog by remember { mutableStateOf(false) }
 
@@ -298,7 +395,9 @@ fun DialogFood(
 @Composable
 fun Caterers(
     userviewmodel: UserViewModel,
-    menu: DataXX
+    cateringviewmodel : CateringViewModel = hiltViewModel(),
+    menu: DataXX,
+    navController: NavController
 ) {
     Surface {
         val stepSize = 50f
@@ -307,6 +406,7 @@ fun Caterers(
         val context = LocalContext.current
         val listState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
+        val token by userviewmodel.token.collectAsState()
         val dateDialogState = rememberMaterialDialogState()
         val timeDialogState = rememberMaterialDialogState()
         var clicked by remember { mutableStateOf(false) }
@@ -315,14 +415,15 @@ fun Caterers(
         var searchQuery by remember { mutableStateOf("") }
         val drinks = menu.menuItems.filter { it.type == "Drink" }
         var isLoading by remember { mutableStateOf(false) }
-        val token by userviewmodel.token.collectAsState()
         val desserts = menu.menuItems.filter { it.type == "Dessert" }
         var pickedtime by remember { mutableStateOf(LocalTime.NOON) }
         var pickeddate by remember { mutableStateOf(LocalDate.now()) }
         var sliderpos by remember { mutableFloatStateOf(50.0f) }
-        var launchdialogbox by remember { mutableStateOf(false) }
+        //var launchdialogbox by remember { mutableStateOf(false) }
+        val checkdialogbox by cateringviewmodel.isDialogVisible.collectAsState()
         var requestreceived by remember { mutableStateOf(false) }
-        var cartItems by remember { mutableStateOf(listOf<CartItems>()) }
+        var cartItems by remember { mutableStateOf(listOf<MenuItem>()) }
+        var cartPackageItems by remember { mutableStateOf(listOf<Package>())}
         val (address, setaddress) = remember { mutableStateOf("") }
         var isScrollingForward by remember { mutableStateOf(true) }
         val appetizers = menu.menuItems.filter { it.type == "Appetizer" }
@@ -333,7 +434,8 @@ fun Caterers(
         val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         var currentIndex by remember { androidx.compose.runtime.mutableIntStateOf(0) }
         val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm").format(pickedtime) } }
-        val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
+        val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("yyyy-MM-dd").format(pickeddate) } }
+        val cateringbookresult = cateringviewmodel.cateringbookresult.observeAsState()
 
         val filteredItems = if (searchQuery.isNotEmpty()) {
             when (selectedOption.value) {
@@ -350,6 +452,28 @@ fun Caterers(
                 "Desserts" -> desserts
                 "Drinks" -> drinks
                 else -> emptyList()
+            }
+        }
+
+        val itemid = remember { mutableStateListOf<Int>() }
+        val packageid = remember { mutableStateListOf<Int>() }
+
+        LaunchedEffect (clicked) {
+            if(clicked) {
+                val cateringbookresults = CateringBook(
+                    address = address,
+                    bill = ((sliderpos.roundToInt()) * cartItems.sumOf { it.cost ?: 0 } + (sliderpos.roundToInt() * cartPackageItems.sumOf { it.price })).toDouble(),
+                    cateringServiceId = menu.id,
+                    date = formatteddate,
+                    guestCount = sliderpos.roundToInt(),
+                    startTime = formattedtime,
+                    menuItemIds = itemid,
+                    endTime = null,
+                    packageIds = packageid
+                )
+                cateringviewmodel.bookcatering(cateringbookresults, "Bearer $token")
+                clicked = false
+                requestreceived = true
             }
         }
 
@@ -374,10 +498,18 @@ fun Caterers(
             }
         }
 
-        fun addToCart(item: CartItems) {
+        fun addToCart(item: MenuItem) {
             cartItems = cartItems.toMutableList().apply {
                 add(item)
             }
+            itemid.add(item.id)
+        }
+
+        fun addPackageToCart(pack: Package) {
+            cartPackageItems = cartPackageItems.toMutableList().apply {
+                add(pack)
+            }
+            packageid.add(pack.id)
         }
 
         Column (
@@ -602,10 +734,11 @@ fun Caterers(
                                         rate = it,
                                         addtocart = {
                                             filteredItems[option].cost?.let {
-                                                CartItems(
-                                                    imageUrl = "https://shorturl.at/6DXeG",
-                                                    title = filteredItems[option].name,
-                                                    rate = it
+                                                MenuItem(
+                                                    name = filteredItems[option].name,
+                                                    cost = filteredItems[option].cost,
+                                                    id = filteredItems[option].id,
+                                                    type = filteredItems[option].type
                                                 )
                                             }?.let {
                                                 addToCart(
@@ -628,9 +761,16 @@ fun Caterers(
                                     title = menu.packages[it].name,
                                     items = menu.packages[it].menuItems,
                                     price = menu.packages[it].price,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(200.dp)
+                                    addtopackagecart = {
+                                        addPackageToCart(
+                                            Package(
+                                                id = menu.packages[it].id,
+                                                name = menu.packages[it].name,
+                                                menuItems = menu.packages[it].menuItems,
+                                                price = menu.packages[it].price
+                                            )
+                                        )
+                                    }
                                 )
                                 AddHeight(10.dp)
                             }
@@ -650,7 +790,7 @@ fun Caterers(
                 ) {
                     Button(
                         onClick = {
-                            if (cartItems.isNotEmpty()) {
+                            if (cartItems.isNotEmpty() || cartPackageItems.isNotEmpty()) {
                                 isSheetopen = true
                             } else {
                                 Toast.makeText(context, "No Items Selected", Toast.LENGTH_SHORT).show()
@@ -671,9 +811,9 @@ fun Caterers(
                         )
                     }
 
-                    if (cartItems.isNotEmpty()) {
+                    if (cartItems.isNotEmpty() || cartPackageItems.isNotEmpty()) {
                         Text(
-                            text = cartItems.size.toString(),
+                            text = cartItems.size.toString() + cartPackageItems.size.toString(),
                             color = backgroundcolor,
                             fontSize = dimens.buttontext,
                             modifier = Modifier
@@ -717,6 +857,17 @@ fun Caterers(
                                             }
                                         })
                                     }
+
+                                    items(cartPackageItems.size) { item ->
+                                        CartPackageRow(cartPackageItems[item], onClick = {
+                                            cartPackageItems = cartPackageItems.toMutableList().apply {
+                                                removeAt(item)
+                                            }
+                                            if (cartPackageItems.isEmpty()) {
+                                                isSheetopen = false
+                                            }
+                                        })
+                                    }
                                 }
 
                                 AddHeight(30.dp)
@@ -749,7 +900,7 @@ fun Caterers(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Funca(
-                                        text = "${(sliderpos.roundToInt()) * cartItems.sumOf { it.rate }} ",
+                                        text = "${(sliderpos.roundToInt()) * cartItems.sumOf { it.cost ?: 0 } + (sliderpos.roundToInt() * cartPackageItems.sumOf { it.price })} ",
                                         icon = Icons.Default.Money,
                                         modifier = Modifier
                                             .fillMaxWidth(fraction = 0.8f)
@@ -992,21 +1143,41 @@ fun Caterers(
                         pickedtime = it
                     }
                 }
+            }
 
-                if(launchdialogbox) {
-                    AlertDialog(
-                        onDismissRequest = {launchdialogbox = false},
-                        confirmButton = {
-                            Button(
-                                onClick = {launchdialogbox = false}
-                            ) {
-                                Text("Close")
-                            }
-                        },
-                        title = { Text("Venue Booking") },
-                        text = { Text("your request is sent to the vendor") }
-                    )
+            if(requestreceived) {
+                when (cateringbookresult.value) {
+                    is NetworkResponse.Failure -> isLoading = false
+                    NetworkResponse.Loading -> isLoading = true
+                    is NetworkResponse.Success -> {
+                        isLoading = false
+                        isSheetopen = false
+                        requestreceived = false
+                    }
+                    else -> {}
                 }
+            }
+
+            if(checkdialogbox) {
+                AlertDialog(
+                    onDismissRequest = { cateringviewmodel.closeDialog() },
+                    confirmButton = {
+                        Button(
+                            onClick = { navController.navigate(route = Screens.Home.route) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = backgroundcolor,
+                                contentColor = secondarycolor
+                            )
+                        ) {
+                            Text("Close")
+                        }
+                    },
+                    title = { Text("Catering Booking") },
+                    text = { Text("your request is sent to the vendor") },
+                    containerColor = backgroundcolor,
+                    textContentColor = secondarycolor,
+                    titleContentColor = secondarycolor
+                )
             }
         }
     }

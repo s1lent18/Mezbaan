@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -45,24 +46,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import com.example.mezbaan.model.dataprovider.BookingOptions
 import com.example.mezbaan.model.dataprovider.NavigationBarItems
+import com.example.mezbaan.model.models.Booking
 import com.example.mezbaan.ui.theme.Bebas
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.navyblue
 import com.example.mezbaan.ui.theme.secondarycolor
 import com.example.mezbaan.viewmodel.AuthViewModel
+import com.example.mezbaan.viewmodel.BookingViewModel
 import com.example.mezbaan.viewmodel.navigation.Screens
 import com.exyte.animatednavbar.AnimatedNavigationBar
 import com.exyte.animatednavbar.animation.balltrajectory.Parabolic
 import com.exyte.animatednavbar.animation.indendshape.Height
 import com.exyte.animatednavbar.animation.indendshape.shapeCornerRadius
 import com.exyte.animatednavbar.utils.noRippleClickable
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun Approvecard(model: String, text: String, date: String, time: String, status: String) {
@@ -80,7 +86,6 @@ fun Approvecard(model: String, text: String, date: String, time: String, status:
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            // Profile picture container
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.3f)
@@ -110,7 +115,6 @@ fun Approvecard(model: String, text: String, date: String, time: String, status:
 
             Column(
                 modifier = Modifier
-                    //.fillMaxWidth()
                     .padding(start = 8.dp, top = 10.dp),
                 verticalArrangement = Arrangement.Center
             ) {
@@ -135,9 +139,9 @@ fun Approvecard(model: String, text: String, date: String, time: String, status:
                             .size(8.dp)
                             .background(
                                 color = when (status) {
-                                    "approved" -> Color.Green
-                                    "waiting" -> navyblue
-                                    "rejected" -> Color.Red
+                                    "APPROVED" -> Color.Green
+                                    "REQUESTED" -> navyblue
+                                    "CANCELLED" -> Color.Red
                                     else -> Color.Gray
                                 },
                                 shape = CircleShape
@@ -146,9 +150,11 @@ fun Approvecard(model: String, text: String, date: String, time: String, status:
                     AddWidth(4.dp)
                     Text(
                         text = when (status) {
-                            "approved" -> "Approved"
-                            "waiting" -> "Waiting"
-                            "rejected" -> "Rejected"
+                            "APPROVED" -> "Approved"
+                            "REQUESTED" -> "Requested"
+                            "CANCELLED" -> "Rejected"
+                            "FULFILLED" -> "Fulfilled"
+                            "REVIEWED" -> "reviewed"
                             else -> "Unknown status"
                         },
                         color = secondarycolor,
@@ -163,6 +169,7 @@ fun Approvecard(model: String, text: String, date: String, time: String, status:
 
 @Composable
 fun Messages(
+    bookingviewmodel : BookingViewModel = hiltViewModel(),
     navController: NavController,
     authviewmodel: AuthViewModel = viewModel()
 ) {
@@ -171,6 +178,23 @@ fun Messages(
     val insets = WindowInsets.navigationBars
     val bottomInsetDp = with(LocalDensity.current) { insets.getBottom(LocalDensity.current).toDp() }
     val selectedOption = remember { mutableStateOf("Venues") }
+    val bookings by bookingviewmodel.bookings.collectAsState()
+
+    val venues = mutableListOf<Booking>()
+    val catering = mutableListOf<Booking>()
+    val photography = mutableListOf<Booking>()
+    val decorationService = mutableListOf<Booking>()
+    val otherService = mutableListOf<Booking>()
+
+    bookings.forEach { booking ->
+        when (booking.type) {
+            "venue" -> venues.add(booking)
+            "cateringService" -> catering.add(booking)
+            "photography" -> photography.add(booking)
+            "decorationService" -> decorationService.add(booking)
+            "otherService" -> otherService.add(booking)
+        }
+    }
 
     Scaffold(
         modifier = Modifier
@@ -295,27 +319,131 @@ fun Messages(
                     }
                 }
 
-                LazyColumn (
-                    modifier = Modifier.constrainAs(approvals) {
-                        top.linkTo(itemstobook.bottom, margin = 20.dp)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                        bottom.linkTo(parent.bottom, margin = 50.dp)
-                        width = Dimension.percent(0.9f)
-                        height = Dimension.fillToConstraints
+                if (bookings.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
-                ) {
-                    items(5) {
-                        if (selectedOption.value == "Photographers") {
-                            Approvecard(
-                                model = "https://drive.google.com/uc?export=view&id=1Gae9YMksmUfU74cgXX0x1ivwOdLb4H4L",
-                                text = "Photographer Name",
-                                date = "Nov 11 2024",
-                                time = "13:30",
-                                status = "rejected"
-                            )
+                }
+                else {
+                    when (selectedOption.value) {
+                        "Venues" -> {
+                            LazyColumn (
+                                modifier = Modifier.constrainAs(approvals) {
+                                    top.linkTo(itemstobook.bottom, margin = 20.dp)
+                                    start.linkTo(parent.start)
+                                    end.linkTo(parent.end)
+                                    bottom.linkTo(parent.bottom, margin = 50.dp)
+                                    width = Dimension.percent(0.9f)
+                                    height = Dimension.fillToConstraints
+                                }
+                            ) {
+                                items(venues.size) {
+                                    Approvecard(
+                                        model = "https://drive.google.com/uc?export=view&id=1Gae9YMksmUfU74cgXX0x1ivwOdLb4H4L",
+                                        text = venues[it].serviceName,
+                                        date = LocalDate.parse(venues[it].date.substring(0, 10)).format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                                        time = venues[it].type,
+                                        status = venues[it].status
+                                    )
+                                    AddHeight(20.dp)
+                                }
+                            }
                         }
-                        AddHeight(20.dp)
+                        "Decorators" -> {
+                            LazyColumn (
+                                modifier = Modifier.constrainAs(approvals) {
+                                    top.linkTo(itemstobook.bottom, margin = 20.dp)
+                                    start.linkTo(parent.start)
+                                    end.linkTo(parent.end)
+                                    bottom.linkTo(parent.bottom, margin = 50.dp)
+                                    width = Dimension.percent(0.9f)
+                                    height = Dimension.fillToConstraints
+                                }
+                            ) {
+                                items(decorationService.size) {
+                                    Approvecard(
+                                        model = "https://drive.google.com/uc?export=view&id=1Gae9YMksmUfU74cgXX0x1ivwOdLb4H4L",
+                                        text = decorationService[it].serviceName,
+                                        date = LocalDate.parse(decorationService[it].date.substring(0, 10)).format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                                        time = decorationService[it].type,
+                                        status = decorationService[it].status
+                                    )
+                                    AddHeight(20.dp)
+                                }
+                            }
+                        }
+                        "Caterers" -> {
+                            LazyColumn (
+                                modifier = Modifier.constrainAs(approvals) {
+                                    top.linkTo(itemstobook.bottom, margin = 20.dp)
+                                    start.linkTo(parent.start)
+                                    end.linkTo(parent.end)
+                                    bottom.linkTo(parent.bottom, margin = 50.dp)
+                                    width = Dimension.percent(0.9f)
+                                    height = Dimension.fillToConstraints
+                                }
+                            ) {
+                                items(catering.size) {
+                                    Approvecard(
+                                        model = "https://drive.google.com/uc?export=view&id=1Gae9YMksmUfU74cgXX0x1ivwOdLb4H4L",
+                                        text = catering[it].serviceName,
+                                        date = LocalDate.parse(catering[it].date.substring(0, 10)).format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                                        time = catering[it].type,
+                                        status = catering[it].status
+                                    )
+                                    AddHeight(20.dp)
+                                }
+                            }
+                        }
+                        "Photographers" -> {
+                            LazyColumn (
+                                modifier = Modifier.constrainAs(approvals) {
+                                    top.linkTo(itemstobook.bottom, margin = 20.dp)
+                                    start.linkTo(parent.start)
+                                    end.linkTo(parent.end)
+                                    bottom.linkTo(parent.bottom, margin = 50.dp)
+                                    width = Dimension.percent(0.9f)
+                                    height = Dimension.fillToConstraints
+                                }
+                            ) {
+                                items(photography.size) {
+                                    Approvecard(
+                                        model = "https://drive.google.com/uc?export=view&id=1Gae9YMksmUfU74cgXX0x1ivwOdLb4H4L",
+                                        text = photography[it].serviceName,
+                                        date = LocalDate.parse(photography[it].date.substring(0, 10)).format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                                        time = photography[it].type,
+                                        status = photography[it].status
+                                    )
+                                    AddHeight(20.dp)
+                                }
+                            }
+                        }
+                        "OtherServices" -> {
+                            LazyColumn (
+                                modifier = Modifier.constrainAs(approvals) {
+                                    top.linkTo(itemstobook.bottom, margin = 20.dp)
+                                    start.linkTo(parent.start)
+                                    end.linkTo(parent.end)
+                                    bottom.linkTo(parent.bottom, margin = 50.dp)
+                                    width = Dimension.percent(0.9f)
+                                    height = Dimension.fillToConstraints
+                                }
+                            ) {
+                                items(otherService.size) {
+                                    Approvecard(
+                                        model = "https://drive.google.com/uc?export=view&id=1Gae9YMksmUfU74cgXX0x1ivwOdLb4H4L",
+                                        text = otherService[it].serviceName,
+                                        date = LocalDate.parse(otherService[it].date.substring(0, 10)).format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                                        time = otherService[it].type,
+                                        status = otherService[it].status
+                                    )
+                                    AddHeight(20.dp)
+                                }
+                            }
+                        }
                     }
                 }
             }

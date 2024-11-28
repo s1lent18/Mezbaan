@@ -10,5 +10,6 @@ sealed class Screens(val route: String) {
     data object Venues: Screens("Venues_Screen/{index}")
     data object Caterers: Screens("Caterers_Screen/{index}")
     data object Decorators: Screens("Decorators_Screen/{index}")
+    data object OtherServices: Screens("OtherServices_Screen/{index}")
     data object Photographers: Screens("Photographers_Screen/{index}")
 }

@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Brightness3
 import androidx.compose.material.icons.filled.Brightness7
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Money
@@ -197,26 +198,27 @@ fun Venues(
 ) {
     val stepSize = 25f
     val minValue = 50f
-    val maxValue = venue.capacity.toFloat()
     val pagecount = venue.images.size
     val context = LocalContext.current
+    val maxValue = venue.capacity.toFloat()
     val coroutineScope = rememberCoroutineScope()
+    val token = userviewmodel.token.collectAsState()
     val dateDialogState = rememberMaterialDialogState()
+    var clicked by remember { mutableStateOf(false) }
+    var successful by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
-    val launchdialogbox by venueviewmodel.isDialogVisible.collectAsState()
-    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var isDay by rememberSaveable { mutableStateOf(false) }
     var pickeddate by remember { mutableStateOf(LocalDate.now()) }
     val pagerState = rememberPagerState(pageCount = { pagecount })
     var sliderpos by remember { mutableFloatStateOf(50.0f) }
-    var clicked by remember { mutableStateOf(false) }
-    val venuebookresult = venueviewmodel.venuebookingresult.observeAsState()
-    val token = userviewmodel.token.collectAsState()
     var requestreceived by remember { mutableStateOf(false) }
     var isSheetopen by rememberSaveable { mutableStateOf(false) }
-    var isDay by rememberSaveable { mutableStateOf(false) }
-    val butcolor = if (isDay) backgroundcolor else secondarycolor
+    val launchdialogbox by venueviewmodel.isDialogVisible.collectAsState()
     val tcolor = if (!isDay) backgroundcolor else secondarycolor
     val price = if (!isDay) venue.priceNight else venue.priceDay
+    val butcolor = if (isDay) backgroundcolor else secondarycolor
+    val venuebookresult = venueviewmodel.venuebookingresult.observeAsState()
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("yyyy-MM-dd").format(pickeddate) } }
 
     LaunchedEffect (clicked) {
@@ -386,10 +388,12 @@ fun Venues(
                             modifier = Modifier.fillMaxWidth()
                         )
                         AddHeight(dimens.small2)
-                        BusinessCard(
-                            managername = venue.managerName,
-                            contact = venue.managerNumber
-                        )
+                        venue.managerName?.let {
+                            BusinessCard(
+                                managername = it,
+                                contact = venue.managerNumber
+                            )
+                        }
                         AddHeight(dimens.small2)
                         HorizontalDivider(
                             modifier = Modifier.fillMaxWidth(),
@@ -611,10 +615,19 @@ fun Venues(
                                     CircularProgressIndicator()
                                 }
                                 else {
-                                    Funca(
-                                        icon = Icons.Default.Error,
-                                        text = "Request Failed"
-                                    )
+                                    if (successful) {
+                                        Funca(
+                                            icon = Icons.Default.FastForward,
+                                            text = "Request Sent"
+                                        )
+                                    }
+                                    else {
+                                        Funca(
+                                            icon = Icons.Default.Error,
+                                            text = "Request Failed"
+                                        )
+                                    }
+
                                 }
                             }
                         }
@@ -652,12 +665,16 @@ fun Venues(
 
             if(requestreceived) {
                 when (venuebookresult.value) {
-                    is NetworkResponse.Failure -> isLoading = false
+                    is NetworkResponse.Failure -> {
+                        isLoading = false
+                        successful = false
+                    }
                     NetworkResponse.Loading -> isLoading = true
                     is NetworkResponse.Success -> {
                         isLoading = false
                         isSheetopen = false
                         requestreceived = false
+                        successful = true
                     }
                     null -> { }
                 }
@@ -668,7 +685,10 @@ fun Venues(
                     onDismissRequest = { venueviewmodel.closeDialog() },
                     confirmButton = {
                         Button(
-                            onClick = { navController.navigate(route = Screens.Home.route) },
+                            onClick = {
+                                venueviewmodel.closeDialog()
+                                navController.navigate(route = Screens.Home.route)
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = backgroundcolor,
                                 contentColor = secondarycolor

@@ -22,6 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
@@ -38,10 +40,15 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -58,13 +65,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import com.example.mezbaan.model.dataclasses.DecoratorBook
+import com.example.mezbaan.model.models.Amenity
 import com.example.mezbaan.model.models.DataX
+import com.example.mezbaan.model.response.NetworkResponse
 import com.example.mezbaan.ui.theme.CounterButton
 import com.example.mezbaan.ui.theme.backgroundcolor
 import com.example.mezbaan.ui.theme.dimens
 import com.example.mezbaan.ui.theme.secondarycolor
+import com.example.mezbaan.viewmodel.DecoratorViewModel
+import com.example.mezbaan.viewmodel.UserViewModel
+import com.example.mezbaan.viewmodel.navigation.Screens
 import com.google.accompanist.flowlayout.FlowRow
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
@@ -77,27 +92,62 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
+fun calculateBill(amenities: List<Amenity?>, valueCounter: List<Int>): Double {
+    return amenities.zip(valueCounter) { amenity, count ->
+        ((amenity?.cost ?: 0) * count)
+    }.sum().toDouble()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Decorators(
-    decorator: DataX
+    userviewmodel: UserViewModel,
+    decorator: DataX,
+    decoratorviewmodel : DecoratorViewModel = hiltViewModel(),
+    navController: NavController
 ) {
     Surface {
         val stepSize = 1f
         val minValue = 1f
         val maxValue = 24f
         val listState = rememberLazyListState()
+        val token by userviewmodel.token.collectAsState()
         val dateDialogState = rememberMaterialDialogState()
         val timeDialogState = rememberMaterialDialogState()
+        var clicked by remember { mutableStateOf(false) }
         var isSheetopen by remember { mutableStateOf(false) }
         var sliderpos by remember { mutableFloatStateOf(0f) }
+        var isLoading by remember { mutableStateOf(false) }
+        val decoratorbookresult = decoratorviewmodel.decoratorbookresult.observeAsState()
+        val (address, setaddress) = remember { mutableStateOf("") }
         var pickedtime by remember { mutableStateOf(LocalTime.NOON) }
         var pickeddate by remember { mutableStateOf(LocalDate.now()) }
         var launchhourpicker by remember { mutableStateOf(false) }
+        var requestreceived by remember { mutableStateOf(false) }
+        val launchdialogbox by decoratorviewmodel.isDialogVisible.collectAsState()
         val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         val valueCounter = remember { mutableStateListOf(*Array(decorator.amenities.size) { 0 }) }
         val formattedtime by remember { derivedStateOf { DateTimeFormatter.ofPattern("hh:mm a").format(pickedtime) } }
         val formatteddate by remember { derivedStateOf { DateTimeFormatter.ofPattern("MMM dd yyyy").format(pickeddate) } }
+
+        val selectedAmenities = remember { mutableStateListOf<com.example.mezbaan.model.dataclasses.Amenity>() }
+
+        LaunchedEffect (clicked) {
+            if(clicked) {
+                val decoratorbookresults = DecoratorBook(
+                    address = address,
+                    bill = calculateBill(decorator.amenities, valueCounter),
+                    date = formatteddate,
+                    decorationServiceId = decorator.id,
+                    startTime = formattedtime,
+                    endTime = formattedtime.plus(sliderpos.toInt()),
+                    amenities = selectedAmenities
+                )
+                decoratorviewmodel.bookvenue(decoratorbookresults, "Bearer $token")
+                clicked = false
+                requestreceived = true
+            }
+        }
 
         Column (
             modifier = Modifier
@@ -250,7 +300,6 @@ fun Decorators(
                     Text("Proceed to Booking")
                 }
                 AddHeight(dimens.small2)
-
             }
 
             if (isSheetopen) {
@@ -269,135 +318,213 @@ fun Decorators(
                         verticalArrangement = Arrangement.Top
                     ) {
 
-                        decorator.amenities.forEachIndexed { index, amenity ->
-                            if (amenity != null) {
-                                Row (
-                                    modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Funca(
-                                        text = amenity.amenity,
-                                        modifier = Modifier.fillMaxWidth(fraction = 0.5f).height(50.dp)
-                                    )
-                                    CounterButton(
-                                        value = valueCounter[index].toString(),
-                                        onValueIncreaseClick = {
-                                            valueCounter[index] += 1
-                                        },
-                                        onValueDecreaseClick = {
-                                            valueCounter[index] = maxOf(valueCounter[0] - 1, 0)
-                                        },
-                                        onValueClearClick = {
-                                            valueCounter[index] = 0
-                                        }
-                                    )
-                                    AddWidth(20.dp)
-                                }
-                                AddHeight(20.dp)
-                            }
-                        }
-
-                        Funca(
-                            text = "Bill: ${(
-                                decorator.amenities
-                                    .filterNotNull()
-                                    .mapIndexed { index, amenity ->
-                                        amenity.cost * valueCounter[index]
+                        if (!requestreceived) {
+                            decorator.amenities.forEachIndexed { index, amenity ->
+                                if (amenity != null) {
+                                    Row (
+                                        modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Funca(
+                                            text = amenity.amenity,
+                                            modifier = Modifier.fillMaxWidth(fraction = 0.5f).height(50.dp)
+                                        )
+                                        CounterButton(
+                                            value = valueCounter[index].toString(),
+                                            onValueIncreaseClick = {
+                                                valueCounter[index] += 1
+                                                val existingIndex = selectedAmenities.indexOfFirst { it.decorationAmenityId == amenity.id }
+                                                if (existingIndex >= 0) {
+                                                    selectedAmenities[existingIndex] = selectedAmenities[existingIndex].copy(
+                                                        count = valueCounter[index]
+                                                    )
+                                                } else {
+                                                    selectedAmenities.add(
+                                                        com.example.mezbaan.model.dataclasses.Amenity(
+                                                            count = valueCounter[index],
+                                                            decorationAmenityId = amenity.id
+                                                        )
+                                                    )
+                                                }
+                                            },
+                                            onValueDecreaseClick = {
+                                                valueCounter[index] = maxOf(valueCounter[0] - 1, 0)
+                                                val existingIndex = selectedAmenities.indexOfFirst { it.decorationAmenityId == amenity.id }
+                                                if (existingIndex >= 0) {
+                                                    if (valueCounter[index] > 0) {
+                                                        selectedAmenities[existingIndex] = selectedAmenities[existingIndex].copy(
+                                                            count = valueCounter[index]
+                                                        )
+                                                    } else {
+                                                        selectedAmenities.removeAt(existingIndex)
+                                                    }
+                                                }
+                                            },
+                                            onValueClearClick = {
+                                                valueCounter[index] = 0
+                                                selectedAmenities.removeAll { it.decorationAmenityId == amenity.id }
+                                            }
+                                        )
+                                        AddWidth(20.dp)
                                     }
-                                    .sum()
+                                    AddHeight(20.dp)
+                                }
+                            }
+
+                            Funca(
+                                text = "Bill: ${(
+                                    decorator.amenities
+                                        .filterNotNull()
+                                        .mapIndexed { index, amenity ->
+                                            amenity.cost * valueCounter[index]
+                                        }
+                                        .sum()
+                                    )
+                                }",
+                                icon = Icons.Default.Money
+                            )
+                            AddHeight(20.dp)
+                            TextField(
+                                label = { Text("Address") },
+                                value = address,
+                                onValueChange = setaddress,
+                                modifier = Modifier
+                                    .fillMaxWidth(fraction = 0.85f)
+                                    .height(50.dp),
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Home,
+                                        contentDescription = null,
+                                        tint = backgroundcolor
+                                    )
+                                },
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = secondarycolor,
+                                    unfocusedContainerColor = secondarycolor,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    disabledIndicatorColor = Color.Transparent,
+                                    disabledLabelColor = backgroundcolor,
+                                    unfocusedLabelColor = backgroundcolor,
+                                    focusedLabelColor = backgroundcolor,
+                                    disabledTextColor = backgroundcolor,
+                                    focusedTextColor = backgroundcolor,
+                                    unfocusedTextColor = backgroundcolor
+                                ),
+                                shape = RoundedCornerShape(10.dp),
+                                textStyle = TextStyle(
+                                    color = backgroundcolor,
+                                    fontSize = dimens.cardfont
                                 )
-                            }",
-                            icon = Icons.Default.Money
-                        )
-                        AddHeight(20.dp)
-                        Row (
-                            modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Funca(
-                                text = "$formattedtime - ${sliderpos.toInt()} hours",
-                                icon = Icons.Default.AccessTime,
-                                modifier = Modifier
-                                    .fillMaxWidth(fraction = 0.65f)
-                                    .height(50.dp)
                             )
-                            Box (
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .background(secondarycolor)
+                            AddHeight(20.dp)
+                            Row (
+                                modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                IconButton(
-                                    onClick = { timeDialogState.show() }
+                                Funca(
+                                    text = "$formattedtime - ${sliderpos.toInt()} hours",
+                                    icon = Icons.Default.AccessTime,
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.65f)
+                                        .height(50.dp)
+                                )
+                                Box (
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(secondarycolor)
                                 ) {
-                                    Icon(
-                                        Icons.Default.AccessTime,
-                                        contentDescription = null,
-                                        tint = backgroundcolor
-                                    )
+                                    IconButton(
+                                        onClick = { timeDialogState.show() }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.AccessTime,
+                                            contentDescription = null,
+                                            tint = backgroundcolor
+                                        )
+                                    }
+                                }
+                                Box (
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(secondarycolor)
+                                ) {
+                                    IconButton(
+                                        onClick = { launchhourpicker = true }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.AlarmAdd,
+                                            contentDescription = null,
+                                            tint = backgroundcolor
+                                        )
+                                    }
                                 }
                             }
-                            Box (
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .background(secondarycolor)
+                            AddHeight(20.dp)
+                            Row (
+                                modifier = Modifier.fillMaxWidth(fraction = 0.85f),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                IconButton(
-                                    onClick = { launchhourpicker = true }
+                                Funca(
+                                    text = formatteddate,
+                                    icon = Icons.Default.CalendarMonth,
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.8f)
+                                        .height(50.dp)
+                                )
+                                Box (
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(secondarycolor)
                                 ) {
-                                    Icon(
-                                        Icons.Default.AlarmAdd,
-                                        contentDescription = null,
-                                        tint = backgroundcolor
+                                    IconButton(
+                                        onClick = { dateDialogState.show() }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.CalendarMonth,
+                                            contentDescription = null,
+                                            tint = backgroundcolor
+                                        )
+                                    }
+                                }
+                            }
+                            AddHeight(20.dp)
+                            Button(
+                                onClick = { clicked = true },
+                                modifier = Modifier
+                                    .fillMaxWidth(fraction = 0.85f)
+                                    .height(50.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = secondarycolor,
+                                    contentColor = backgroundcolor
+                                ),
+                                shape = RoundedCornerShape(5.dp)
+                            ) {
+                                Text("Confirm Booking")
+                            }
+                            AddHeight(20.dp)
+                        }
+                        else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(170.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (isLoading) {
+                                    CircularProgressIndicator()
+                                }
+                                else {
+                                    Funca(
+                                        icon = Icons.Default.Error,
+                                        text = "Request Failed"
                                     )
                                 }
                             }
                         }
-                        AddHeight(20.dp)
-                        Row (
-                            modifier = Modifier.fillMaxWidth(fraction = 0.85f),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Funca(
-                                text = formatteddate,
-                                icon = Icons.Default.CalendarMonth,
-                                modifier = Modifier
-                                    .fillMaxWidth(fraction = 0.8f)
-                                    .height(50.dp)
-                            )
-                            Box (
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .background(secondarycolor)
-                            ) {
-                                IconButton(
-                                    onClick = { dateDialogState.show() }
-                                ) {
-                                    Icon(
-                                        Icons.Default.CalendarMonth,
-                                        contentDescription = null,
-                                        tint = backgroundcolor
-                                    )
-                                }
-                            }
-                        }
-                        AddHeight(20.dp)
-                        Button(
-                            onClick = { },
-                            modifier = Modifier
-                                .fillMaxWidth(fraction = 0.85f)
-                                .height(50.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = secondarycolor,
-                                contentColor = backgroundcolor
-                            ),
-                            shape = RoundedCornerShape(5.dp)
-                        ) {
-                            Text("Confirm Booking")
-                        }
-                        AddHeight(20.dp)
                     }
                 }
                 MaterialDialog (
@@ -514,6 +641,40 @@ fun Decorators(
                         containerColor = backgroundcolor
                     )
                 }
+            }
+            if(requestreceived) {
+                when (decoratorbookresult.value) {
+                    is NetworkResponse.Failure -> isLoading = false
+                    NetworkResponse.Loading -> isLoading = true
+                    is NetworkResponse.Success -> {
+                        isLoading = false
+                        isSheetopen = false
+                        requestreceived = false
+                    }
+                    null -> { }
+                }
+            }
+
+            if(launchdialogbox) {
+                AlertDialog(
+                    onDismissRequest = { decoratorviewmodel.closeDialog() },
+                    confirmButton = {
+                        Button(
+                            onClick = { navController.navigate(route = Screens.Home.route) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = backgroundcolor,
+                                contentColor = secondarycolor
+                            )
+                        ) {
+                            Text("Close")
+                        }
+                    },
+                    title = { Text("Decorator Booking") },
+                    text = { Text("your request is sent to the vendor") },
+                    containerColor = backgroundcolor,
+                    textContentColor = secondarycolor,
+                    titleContentColor = secondarycolor
+                )
             }
         }
     }

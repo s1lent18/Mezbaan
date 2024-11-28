@@ -5,12 +5,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mezbaan.model.api.BookPhotographerApi
 import com.example.mezbaan.model.api.GetPhotographerApi
-import com.example.mezbaan.model.api.RetrofitInstance
+import com.example.mezbaan.model.api.GetSinglePhotographerApi
 import com.example.mezbaan.model.dataclasses.PhotographerBook
-import com.example.mezbaan.model.models.DataX
-import com.example.mezbaan.model.models.PhotographerReqHandle
-import com.example.mezbaan.model.models.temp1
+import com.example.mezbaan.model.models.DataXXX
+import com.example.mezbaan.model.models.DataXXXX
+import com.example.mezbaan.model.requests.BookingReq
 import com.example.mezbaan.model.response.NetworkResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,47 +22,58 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PhotographerViewModel @Inject constructor(
-    private val getphotographerapi : GetPhotographerApi
+    private val getphotographerapi : GetPhotographerApi,
+    private val bookphotographerapi : BookPhotographerApi,
+    private val getsinglephotographerapi : GetSinglePhotographerApi
 ) : ViewModel() {
 
-    private val photographerapi = RetrofitInstance.photographerapi
-    private val _photographerbookingresult = MutableLiveData<NetworkResponse<PhotographerReqHandle>>()
-    val photographerbookingresult: LiveData<NetworkResponse<PhotographerReqHandle>> = _photographerbookingresult
+    private val _photographerbookingresult = MutableLiveData<NetworkResponse<BookingReq>>()
+    val photographerbookingresult: LiveData<NetworkResponse<BookingReq>> = _photographerbookingresult
 
-    private val _photographers = MutableStateFlow<List<temp1>>(emptyList())
-    val photographers: StateFlow<List<temp1>> = _photographers
+    private val _photographers = MutableStateFlow<List<DataXXX>>(emptyList())
+    val photographers: StateFlow<List<DataXXX>> = _photographers
 
-    fun bookphotographer(photographerbook: PhotographerBook) {
-        _photographerbookingresult.value = NetworkResponse.Loading
+    private val _singlePhotographer = MutableStateFlow<DataXXXX?>(null)
+    val singlePhotographer: StateFlow<DataXXXX?> = _singlePhotographer
 
+    private val _isDialogVisible = MutableStateFlow(false)
+    val isDialogVisible: StateFlow<Boolean> = _isDialogVisible
+
+    init {
+        fetchPhotographers()
+    }
+
+    fun bookphotographer(photographerbook: PhotographerBook, token: String) {
+        _photographerbookingresult.postValue(NetworkResponse.Loading)
         viewModelScope.launch {
             try {
-                val response = photographerapi.photographerBooking(photographerbook)
                 withTimeout(15_000) {
-                    _photographerbookingresult.value = NetworkResponse.Failure("Request Failed")
-                }
-                if (response.isSuccessful) {
-                    response.body()?.let {
-                        _photographerbookingresult.value = NetworkResponse.Success(it)
+                    val response = bookphotographerapi.photographerBooking(token = token, photographerreq = photographerbook)
+                    Log.d("Booking", "${response.code()}")
+                    if (response.isSuccessful) {
+                        response.body()?.let {
+                            _photographerbookingresult.postValue(NetworkResponse.Success(it))
+                            _isDialogVisible.value = true
+                            Log.d("Booking", "Venues Updated: done")
+                        }
+                    } else {
+                        _photographerbookingresult.postValue(NetworkResponse.Failure("Request Failed"))
+                        Log.d("Booking", "Venues Updated: failed")
                     }
-                } else {
-                    _photographerbookingresult.value = NetworkResponse.Failure("Request Failed")
                 }
             } catch (e: Exception) {
-                _photographerbookingresult.value = NetworkResponse.Failure("Request Failed")
+                _photographerbookingresult.postValue(NetworkResponse.Failure("Request Failed: ${e.message}"))
             }
         }
     }
 
-
-
-    private fun fetchPhotographers() {
+    fun getsinglephotographer(id: Int) {
         viewModelScope.launch {
             try {
-                val response = getphotographerapi.getPhotographers(limit = 20, page = 1)
+                val response = getsinglephotographerapi.getPhotography(id = id)
                 if (response.isSuccessful) {
                     response.body()?.let { decoratorResponse ->
-                       // _photographers.value = decoratorResponse.name
+                        _singlePhotographer.value = decoratorResponse.data
                     }
                 } else {
                     Log.e("API Response", "Failed: ${response.errorBody()?.string()}")
@@ -70,5 +82,26 @@ class PhotographerViewModel @Inject constructor(
                 Log.e("API Error", "Exception: ${e.message}")
             }
         }
+    }
+
+    private fun fetchPhotographers() {
+        viewModelScope.launch {
+            try {
+                val response = getphotographerapi.getPhotographers()
+                if (response.isSuccessful) {
+                    response.body()?.let { decoratorResponse ->
+                        _photographers.value = decoratorResponse.data
+                    }
+                } else {
+                    Log.e("API Response", "Failed: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                Log.e("API Error", "Exception: ${e.message}")
+            }
+        }
+    }
+
+    fun closeDialog() {
+        _isDialogVisible.value = false
     }
 }

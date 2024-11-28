@@ -5,11 +5,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mezbaan.model.api.BookDecoratorApi
-import com.example.mezbaan.model.api.GetDecoratorApi
-import com.example.mezbaan.model.dataclasses.DecoratorBook
-import com.example.mezbaan.model.dataclasses.VenueBook
-import com.example.mezbaan.model.models.DataX
+import com.example.mezbaan.model.api.BookOtherServicesApi
+import com.example.mezbaan.model.api.GetOtherServicesApi
+import com.example.mezbaan.model.dataclasses.OtherServicesBook
+import com.example.mezbaan.model.models.DataXXXXX
 import com.example.mezbaan.model.requests.BookingReq
 import com.example.mezbaan.model.response.NetworkResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,56 +19,56 @@ import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 @HiltViewModel
-class DecoratorViewModel @Inject constructor(
-    private val getdecoratorapi : GetDecoratorApi,
-    private val bookdecoratorapi : BookDecoratorApi
+class OtherServicesViewModel @Inject constructor(
+    private val getotherservicesapi : GetOtherServicesApi,
+    private val bookotherservicesapi : BookOtherServicesApi
 ) : ViewModel() {
 
     init {
-        fetchDecorators()
+        fetchOtherService()
     }
 
-    private val _decoratorbookresult = MutableLiveData<NetworkResponse<BookingReq>>()
-    val decoratorbookresult: LiveData<NetworkResponse<BookingReq>> = _decoratorbookresult
+    private val _otherservicebookresult = MutableLiveData<NetworkResponse<BookingReq>>()
+    val otherservicebookresult: LiveData<NetworkResponse<BookingReq>> = _otherservicebookresult
 
-    private val _decorators = MutableStateFlow<List<DataX>>(emptyList())
-    val decorators: StateFlow<List<DataX>> = _decorators
+    private val _vendors = MutableStateFlow<List<DataXXXXX>>(emptyList())
+    val vendors: StateFlow<List<DataXXXXX>> = _vendors
 
     private val _isDialogVisible = MutableStateFlow(false)
     val isDialogVisible: StateFlow<Boolean> = _isDialogVisible
 
-    fun bookvenue(decoratorbook : DecoratorBook, token: String) {
-        _decoratorbookresult.postValue(NetworkResponse.Loading)
+    fun bookotherservice(otherservicebook: OtherServicesBook, token: String) {
+        
+        _otherservicebookresult.postValue(NetworkResponse.Loading)
         viewModelScope.launch {
             try {
                 withTimeout(15_000) {
-                    val response = bookdecoratorapi.decoratorBooking(token = token, decoratorreq = decoratorbook)
+                    val response = bookotherservicesapi.otherservicesBooking(token = token, otherservicesreq = otherservicebook)
                     Log.d("Booking", "${response.code()}")
                     if (response.isSuccessful) {
                         response.body()?.let {
-                            _decoratorbookresult.postValue(NetworkResponse.Success(it))
+                            _otherservicebookresult.postValue(NetworkResponse.Success(it))
                             _isDialogVisible.value = true
                             Log.d("Booking", "Venues Updated: done")
                         }
                     } else {
-                        _decoratorbookresult.postValue(NetworkResponse.Failure("Request Failed"))
+                        _otherservicebookresult.postValue(NetworkResponse.Failure("Request Failed"))
                         Log.d("Booking", "Venues Updated: failed")
                     }
                 }
             } catch (e: Exception) {
-                _decoratorbookresult.postValue(NetworkResponse.Failure("Request Failed: ${e.message}"))
+                _otherservicebookresult.postValue(NetworkResponse.Failure("Request Failed: ${e.message}"))
             }
         }
     }
 
-    private fun fetchDecorators(limit: Int = 20, page: Int = 1) {
+    private fun fetchOtherService() {
         viewModelScope.launch {
             try {
-                val response = getdecoratorapi.getDecorators(limit, page)
+                val response = getotherservicesapi.getOtherServices()
                 if (response.isSuccessful) {
                     response.body()?.let { decoratorResponse ->
-                        _decorators.value = decoratorResponse.data
-                        Log.d("API Response", "Venues Updated: ${decoratorResponse.data.size}")
+                        _vendors.value = decoratorResponse.data
                     }
                 } else {
                     Log.e("API Response", "Failed: ${response.errorBody()?.string()}")
@@ -83,4 +82,5 @@ class DecoratorViewModel @Inject constructor(
     fun closeDialog() {
         _isDialogVisible.value = false
     }
+    
 }
