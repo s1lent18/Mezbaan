@@ -39,17 +39,7 @@ Go to the [releases page](https://github.com/s1lent18/Mezbaan/releases) to downl
 
 ## Features
 
-- [x] Login Page
-- [x] Anova
-- [x] Bayes Rule
-- [x] Binomial
-- [x] Grouped
-- [x] hypothesis
-- [x] Multinomial
-- [x] Poisson
-- [x] Simple Linear Regression
-- [x] Ungrouped
+- [x] Bookings
+- [x] Reviews
 
-## Api
-- [Flask-Api](https://github.com/s1lent18/Flask-Apis/blob/main/ProbStats.py)
 
