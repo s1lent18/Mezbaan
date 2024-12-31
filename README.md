@@ -1,14 +1,14 @@
 <h1 align="center">
 <br>
-  <img src="screenshots/ProbStats.png" width="300" alt="ProbStats">
+  <img src="screenshots/Mezbaan.png" width="300" alt="Mezbaan">
 <br>
 <br>
-Probability and Statistics with Jetpack Compose
+Mezbaan
 </h1>
 
 ## Download
 
-Go to the [releases page](https://github.com/s1lent18/ProbStats/releases) to download the latest available apk.
+Go to the [releases page](https://github.com/s1lent18/Mezbaan/releases) to download the latest available apk.
 
 ## Screenshots
 
@@ -18,8 +18,12 @@ Go to the [releases page](https://github.com/s1lent18/ProbStats/releases) to dow
   <img src="screenshots/Signup.png" width="250" alt="Signup">
   <img src="screenshots/Home.png" width="250" alt="Home">
   <img src="screenshots/Account.png" width="250" alt="Account">
-  <img src="screenshots/History.png" width="250" alt="History Light Mode">
-  <img src="screenshots/SignupPage.png" width="250" alt="Signup Page Light Mode">
+  <img src="screenshots/Venue.png" width="250" alt="Venue">
+  <img src="screenshots/VenueBook.png" width="250" alt="VenueBook">
+  <img src="screenshots/photographer.png" width="250" alt="Photographer">
+  <img src="screenshots/review.png" width="250" alt="review">
+  <img src="screenshots/reviewdisplay.png" width="250" alt="Review Display">
+  <img src="screenshots/Booking.png" width="250" alt="Booking">
 </p>
 
 ## Development Roadmap
