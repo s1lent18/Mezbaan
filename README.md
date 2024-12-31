@@ -13,10 +13,11 @@ Go to the [releases page](https://github.com/s1lent18/ProbStats/releases) to dow
 ## Screenshots
 
 <p align="center">
-  <img src="screenshots/Home.png" width="250" alt="Home Light Mode">
-  <img src="screenshots/LoginPage.png" width="250" alt="Login Light Mode">
-  <img src="screenshots/ChangePassword.png" width="250" alt="Change Password Light Mode">
-  <img src="screenshots/AccountDetails.png" width="250" alt="Account Details Light Mode">
+  <img src="screenshots/Landing.png" width="250" alt="Landing">
+  <img src="screenshots/Login.png" width="250" alt="Login">
+  <img src="screenshots/Signup.png" width="250" alt="Signup">
+  <img src="screenshots/Home.png" width="250" alt="Home">
+  <img src="screenshots/Account.png" width="250" alt="Account">
   <img src="screenshots/History.png" width="250" alt="History Light Mode">
   <img src="screenshots/SignupPage.png" width="250" alt="Signup Page Light Mode">
 </p>
