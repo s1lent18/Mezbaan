@@ -182,7 +182,7 @@ fun DialogFilter(
         Column (
             modifier = Modifier
                 .clip(RoundedCornerShape(15.dp))
-                .height(250.dp)
+                .height(220.dp)
                 .background(backgroundcolor)
                 ,
             horizontalAlignment = Alignment.CenterHorizontally,
